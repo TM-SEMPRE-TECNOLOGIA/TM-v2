@@ -59,8 +59,10 @@ const mockOrders = [
   }
 ];
 
+import { UserRole } from '../lib/types';
+
 interface WorkOrdersProps {
-  userRole?: 'manager' | 'technician';
+  userRole?: UserRole;
 }
 
 export function WorkOrders({ userRole = 'manager' }: WorkOrdersProps) {

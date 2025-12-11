@@ -19,8 +19,10 @@ const mockCalendarEvents = [
   { day: 28, type: 'meeting', title: 'Reunião Mensal' },
 ];
 
+import { UserRole } from '../lib/types';
+
 interface AgendaProps {
-  userRole?: 'manager' | 'technician';
+  userRole?: UserRole;
 }
 
 export function AgendaAndChecklist({ userRole = 'manager' }: AgendaProps) {

@@ -51,8 +51,10 @@ const myTasksData = [
   { name: 'Sex', tasks: 4 },
 ];
 
+import { UserRole } from '../lib/types';
+
 interface MetricsProps {
-  userRole?: 'manager' | 'technician';
+  userRole?: UserRole;
 }
 
 export function MetricsAndResults({ userRole = 'manager' }: MetricsProps) {

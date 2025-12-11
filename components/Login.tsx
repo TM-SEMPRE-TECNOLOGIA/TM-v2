@@ -1,109 +1,134 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { ShieldCheck, Wrench, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Wrench, Briefcase, ArrowRight, Lock, Mail } from 'lucide-react';
+import { UserRole, USERS } from '../lib/types';
 
 interface LoginProps {
-  onLogin: (role: 'manager' | 'technician') => void;
+  onLogin: (role: UserRole) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showProfiles, setShowProfiles] = useState(true);
+
+  const handleProfileSelect = (role: UserRole) => {
+    if (role) {
+      onLogin(role);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Intro Section */}
-        <div className="flex flex-col justify-center space-y-6">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">MAFFENG <span className="text-emerald-600">CMMS</span></h1>
-            <p className="text-lg text-slate-600">Sistema de Gestão de Manutenção Preventiva e Ordens de Serviço.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-              <div className="bg-emerald-100 p-2 rounded-full text-emerald-700">
-                <ShieldCheck size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">Gestão Completa</h3>
-                <p className="text-sm text-slate-500">Controle total de equipe, métricas e agenda.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-               <div className="bg-blue-100 p-2 rounded-full text-blue-700">
-                <Wrench size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">Execução Otimizada</h3>
-                <p className="text-sm text-slate-500">Foco nas tarefas designadas e checklists.</p>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="max-w-5xl w-full">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+            MAFFENG <span className="text-emerald-400">CMMS</span>
+          </h1>
+          <p className="text-slate-400">Sistema de Gestão de Ordens de Serviço</p>
         </div>
 
-        {/* Login Cards */}
-        <div className="space-y-6">
-          <div className="text-center mb-4 md:hidden">
-            <h2 className="text-xl font-bold">Selecione seu perfil</h2>
-          </div>
+        <Card className="bg-white/95 backdrop-blur shadow-2xl border-0">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-xl">Acesso ao Sistema</CardTitle>
+            <CardDescription>
+              Selecione seu perfil para acessar
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-slate-700">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input 
+                      id="email"
+                      type="email" 
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-slate-700">Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input 
+                      id="password"
+                      type="password" 
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 italic">
+                  * Por enquanto, use os botões ao lado para selecionar o perfil
+                </p>
+              </div>
 
-          {/* Paulo - Gerente */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-emerald-500" onClick={() => onLogin('manager')}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle>Paulo</CardTitle>
-                <ShieldCheck className="text-emerald-500" />
-              </div>
-              <CardDescription>Gerente de Manutenção</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center gap-4">
-              <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100&h=100" />
-                <AvatarFallback>PA</AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Acesso Administrativo</p>
-                <p className="text-xs text-slate-500">Dashboard, Equipe, Todas as O.S, Importação</p>
-              </div>
-            </CardContent>
-            <CardFooter className="pt-0 justify-end">
-              <Button variant="ghost" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 group">
-                Entrar como Paulo <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </CardFooter>
-          </Card>
+              <div className="border-l border-slate-200 pl-6">
+                <p className="text-sm font-medium text-slate-600 mb-3">Acesso Rápido por Perfil:</p>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleProfileSelect('manager')}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 transition-all group"
+                  >
+                    <div className="bg-emerald-500 p-2 rounded-full text-white">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-semibold text-slate-900">Paulo Silva</p>
+                      <p className="text-xs text-slate-500">Gerente de Manutenção</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
 
-          {/* Danilo - Executor */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500" onClick={() => onLogin('technician')}>
-            <CardHeader className="pb-2">
-               <div className="flex items-center justify-between">
-                <CardTitle>Danilo</CardTitle>
-                <Wrench className="text-blue-500" />
-              </div>
-              <CardDescription>Técnico Executor</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center gap-4">
-              <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                <AvatarImage src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=100&h=100" />
-                <AvatarFallback>DA</AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Acesso Operacional</p>
-                <p className="text-xs text-slate-500">Minhas O.S, Agenda Pessoal, Execução</p>
-              </div>
-            </CardContent>
-             <CardFooter className="pt-0 justify-end">
-              <Button variant="ghost" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 group">
-                Entrar como Danilo <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </CardFooter>
-          </Card>
+                  <button
+                    onClick={() => handleProfileSelect('technician')}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all group"
+                  >
+                    <div className="bg-blue-500 p-2 rounded-full text-white">
+                      <Wrench size={20} />
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-semibold text-slate-900">Danilo Costa</p>
+                      <p className="text-xs text-slate-500">Técnico Executor</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
 
-        </div>
-      </div>
-      
-      <div className="fixed bottom-4 text-center w-full text-slate-400 text-xs">
-        Ambiente de Demonstração • v1.0.0
+                  <button
+                    onClick={() => handleProfileSelect('admin')}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-purple-200 bg-purple-50 hover:bg-purple-100 hover:border-purple-300 transition-all group"
+                  >
+                    <div className="bg-purple-500 p-2 rounded-full text-white">
+                      <Briefcase size={20} />
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-semibold text-slate-900">Alexandre Souza</p>
+                      <p className="text-xs text-slate-500">Administrador de Contratos</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="bg-slate-50 border-t border-slate-100 justify-center py-4">
+            <p className="text-xs text-slate-400">
+              MAFFENG CMMS v1.0.0 • Ambiente de Demonstração
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

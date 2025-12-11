@@ -9,7 +9,8 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   FileText,
-  LogOut
+  LogOut,
+  Briefcase
 } from 'lucide-react';
 import { MetricsAndResults } from './components/MetricsAndResults';
 import { TeamList } from './components/TeamList';
@@ -21,19 +22,23 @@ import { ImportOS } from './components/ImportOS';
 import { DifficultyLog } from './components/DifficultyLog';
 import { Reports } from './components/Reports';
 import { Settings } from './components/Settings';
-import { Button } from './components/ui/button';
-
-export type UserRole = 'manager' | 'technician' | null;
+import type { UserRole } from './lib/types';
+import { USERS } from './lib/types';
 
 function App() {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Reset tab when role changes to ensure they land on a valid page
-  const handleLogin = (role: 'manager' | 'technician') => {
+  const handleLogin = (role: UserRole) => {
     setUserRole(role);
-    setActiveTab('dashboard'); // Both have a dashboard/metrics view
+    if (role === 'technician') {
+      setActiveTab('work-orders');
+    } else if (role === 'admin') {
+      setActiveTab('work-orders');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
 
   const handleLogout = () => {
@@ -45,25 +50,23 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  const currentUser = USERS.find(u => u.role === userRole);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <MetricsAndResults userRole={userRole} />;
       case 'team':
-         // Somente Manager
         return userRole === 'manager' ? <TeamList /> : <MetricsAndResults userRole={userRole} />;
       case 'agenda':
         return <AgendaAndChecklist userRole={userRole} />;
       case 'work-orders':
         return <WorkOrders userRole={userRole} />;
       case 'import':
-         // Somente Manager
         return userRole === 'manager' ? <ImportOS /> : <MetricsAndResults userRole={userRole} />;
       case 'difficulties':
-         // Somente Manager
         return userRole === 'manager' ? <DifficultyLog /> : <MetricsAndResults userRole={userRole} />;
       case 'reports':
-         // Somente Manager
         return userRole === 'manager' ? <Reports /> : <MetricsAndResults userRole={userRole} />;
       case 'settings':
         return <Settings userRole={userRole} />;
@@ -72,9 +75,37 @@ function App() {
     }
   };
 
+  const getRoleColor = () => {
+    switch (userRole) {
+      case 'manager': return 'emerald';
+      case 'technician': return 'blue';
+      case 'admin': return 'purple';
+      default: return 'slate';
+    }
+  };
+
+  const getRoleLabel = () => {
+    switch (userRole) {
+      case 'manager': return 'Gerente';
+      case 'technician': return 'Técnico';
+      case 'admin': return 'Administrador';
+      default: return '';
+    }
+  };
+
+  const getWorkOrdersLabel = () => {
+    switch (userRole) {
+      case 'manager': return 'Todas as O.S';
+      case 'technician': return 'Minhas O.S';
+      case 'admin': return 'O.S por Contrato';
+      default: return 'O.S';
+    }
+  };
+
+  const color = getRoleColor();
+
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 font-sans">
-      {/* Sidebar */}
       <aside 
         className={`${
           isSidebarOpen ? 'w-64' : 'w-20'
@@ -95,29 +126,33 @@ function App() {
         </div>
 
         <nav className="flex-1 py-6 px-2 space-y-1">
-          <NavItem 
-            icon={<BarChart2 size={20} />} 
-            label="Dashboard" 
-            isActive={activeTab === 'dashboard'} 
-            isOpen={isSidebarOpen}
-            onClick={() => setActiveTab('dashboard')} 
-          />
+          {userRole === 'manager' && (
+            <NavItem 
+              icon={<BarChart2 size={20} />} 
+              label="Dashboard" 
+              isActive={activeTab === 'dashboard'} 
+              isOpen={isSidebarOpen}
+              onClick={() => setActiveTab('dashboard')} 
+            />
+          )}
           
           <NavItem 
             icon={<ClipboardList size={20} />} 
-            label={userRole === 'manager' ? "Todas as O.S" : "Minhas O.S"} 
+            label={getWorkOrdersLabel()} 
             isActive={activeTab === 'work-orders'} 
             isOpen={isSidebarOpen}
             onClick={() => setActiveTab('work-orders')} 
           />
 
-          <NavItem 
-            icon={<CalendarDays size={20} />} 
-            label="Agenda e Checklist" 
-            isActive={activeTab === 'agenda'} 
-            isOpen={isSidebarOpen}
-            onClick={() => setActiveTab('agenda')} 
-          />
+          {(userRole === 'manager' || userRole === 'technician') && (
+            <NavItem 
+              icon={<CalendarDays size={20} />} 
+              label="Agenda" 
+              isActive={activeTab === 'agenda'} 
+              isOpen={isSidebarOpen}
+              onClick={() => setActiveTab('agenda')} 
+            />
+          )}
 
           {userRole === 'manager' && (
             <>
@@ -176,15 +211,13 @@ function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
         <header className="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-10">
           <h2 className="text-xl font-semibold text-slate-800">
-            {activeTab === 'dashboard' && 'Dashboard'}
+            {activeTab === 'dashboard' && 'Dashboard Geral'}
             {activeTab === 'team' && 'Gestão de Equipe'}
-            {activeTab === 'agenda' && 'Agenda e Checklist'}
-            {activeTab === 'work-orders' && (userRole === 'manager' ? 'Todas as O.S' : 'Minhas O.S')}
+            {activeTab === 'agenda' && 'Agenda'}
+            {activeTab === 'work-orders' && getWorkOrdersLabel()}
             {activeTab === 'import' && 'Importação de O.S'}
             {activeTab === 'difficulties' && 'Registro de Dificuldades'}
             {activeTab === 'reports' && 'Relatórios Gerenciais'}
@@ -193,18 +226,19 @@ function App() {
           <div className="flex items-center gap-4">
             <Notifications />
             <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold border cursor-pointer transition-colors
-              ${userRole === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'}
+              ${userRole === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : ''}
+              ${userRole === 'technician' ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200' : ''}
+              ${userRole === 'admin' ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' : ''}
             `}>
-              {userRole === 'manager' ? 'PA' : 'DA'}
+              {currentUser?.initials || 'U'}
             </div>
             <div className="hidden md:block text-sm">
-                <p className="font-medium text-slate-900 leading-none">{userRole === 'manager' ? 'Paulo Silva' : 'Danilo Costa'}</p>
-                <p className="text-xs text-slate-500 mt-1">{userRole === 'manager' ? 'Gerente' : 'Técnico'}</p>
+                <p className="font-medium text-slate-900 leading-none">{currentUser?.name}</p>
+                <p className="text-xs text-slate-500 mt-1">{getRoleLabel()}</p>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 overflow-auto p-6 bg-slate-50">
           <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
             {renderContent()}

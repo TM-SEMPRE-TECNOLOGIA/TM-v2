@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { UserRole } from '../App';
+import { UserRole } from '../lib/types';
 
 // Mock Data para Usuários
 const initialUsers = [
