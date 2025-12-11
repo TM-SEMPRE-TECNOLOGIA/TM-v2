@@ -70,10 +70,12 @@ interface WorkOrderData {
   documents: DocumentEntry[];
 }
 
+import { UserRole } from '../lib/types';
+
 interface WorkOrderDetailsProps {
   orderId: string;
   onClose: () => void;
-  userRole?: 'manager' | 'technician';
+  userRole?: UserRole;
 }
 
 // Mock Data inicial
