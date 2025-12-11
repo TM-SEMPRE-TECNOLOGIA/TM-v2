@@ -1,0 +1,145 @@
+# Preview Simplificado do App de Gestão de OS
+
+Abaixo está uma visualização condensada e clara de como o aplicativo funcionará em sua forma inicial.
+
+---
+
+## 1. Tela de Login
+
+**Campos:** Email, Senha
+**Após login:** Usuário é redirecionado conforme papel.
+
+* Paulo → Dashboard Geral
+* Danilo → Minhas OS
+* Alexandre → OS por Contrato
+
+---
+
+## 2. Dashboard Geral (Paulo)
+
+### Cards principais:
+
+* Total de OS
+* OS em Levantamento
+* OS em Elaboração
+* OS em Orçamento
+* OS Concluídas
+* OS com Dificuldades
+
+### Lista "Todas as OS"
+
+Tabela com colunas:
+
+* OS
+* Contrato
+* Agência
+* Situação
+* Elaborador
+* Técnico
+* Vencimento
+* Ações (ver detalhe)
+
+**Filtros:** contrato, agência, situação, vencimento, técnico, elaborador.
+
+---
+
+## 3. Tela "Minhas OS" (Danilo)
+
+Lista apenas OS atribuídas a ele.
+Colunas simplificadas:
+
+* OS
+* Agência
+* Data Levantamento
+* Situação
+* Botão: "Abrir OS"
+
+### Dentro da OS (Danilo)
+
+Campos que ele edita:
+
+* Valor Levantamento
+* Anexos (RAT, relatório)
+
+Botão: **Enviar para Orçamento**
+
+---
+
+## 4. Tela "OS por Contrato" (Alexandre)
+
+Lista contendo apenas OS dos contratos que ele administra.
+
+Campos editáveis:
+
+* Valor Aprovado
+  Botões:
+* **Concluir OS**
+* **Devolver ao Elaborador** (Situação: Mudança de Contrato)
+
+---
+
+## 5. Detalhe da OS (todos os papéis com permissões diferentes)
+
+### Cabeçalho
+
+* Nº OS
+* Contrato
+* Agência
+* Prefixo
+* Vencimento
+* Situação
+
+### Atribuições
+
+* Elaborador (Paulo define)
+* Técnico (Paulo/Alexandre definem)
+* Agendamento (Alexandre define)
+* Data Levantamento (Paulo define)
+
+### Financeiro
+
+* Valor Levantamento (Danilo)
+* Valor Aprovado (Alexandre)
+
+### Dificuldades
+
+Lista de registros com:
+
+* Texto
+* Autor
+* Data/Hora
+  Campo para adicionar nova dificuldade.
+
+---
+
+## 6. Importação de OS via Planilha
+
+Fluxo:
+
+1. Upload do arquivo
+2. Mapeamento das colunas
+3. Preview das OS
+4. Confirmar importação
+
+Todas entram com:
+
+* Situação inicial: **Fornecedor Acionado**
+* Sem técnico, elaborador ou datas.
+
+---
+
+## 7. Agenda (fase posterior)
+
+Lista por técnico ou contrato, organizada por agendamentos (campo Agendamento).
+
+---
+
+## 8. Métricas (fase posterior)
+
+* Ranking por técnico
+* OS por contrato
+* OS em atraso (interno 15 dias e vencimento externo)
+
+---
+
+Se quiser, posso transformar este preview em wireframes, mockups ou já em componentes React com navegação simulada.
