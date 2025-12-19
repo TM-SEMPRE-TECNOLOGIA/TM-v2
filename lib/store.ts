@@ -1,45 +1,59 @@
-import { OrdemServico, User, USERS } from './types';
+import { create } from 'zustand';
+import { OrdemServico, USERS } from './types';
 
-let ordensServico: OrdemServico[] = [];
-
-export function getOrdensServico(): OrdemServico[] {
-  return [...ordensServico];
+interface OSState {
+  ordensServico: OrdemServico[];
+  isLoading: boolean;
+  
+  setOrdensServico: (os: OrdemServico[]) => void;
+  addOrdensServico: (novasOS: OrdemServico[]) => void;
+  updateOrdemServico: (id: string, updates: Partial<OrdemServico>) => void;
+  clearOrdensServico: () => void;
 }
 
-export function setOrdensServico(os: OrdemServico[]): void {
-  ordensServico = os;
-}
+export const useOSStore = create<OSState>((set, get) => ({
+  ordensServico: [],
+  isLoading: false,
 
-export function addOrdensServico(novasOS: OrdemServico[]): void {
-  ordensServico = [...ordensServico, ...novasOS];
-}
+  setOrdensServico: (os) => set({ ordensServico: os }),
 
-export function updateOrdemServico(id: string, updates: Partial<OrdemServico>): void {
-  ordensServico = ordensServico.map(os => 
-    os.id === id ? { ...os, ...updates, atualizadoEm: new Date().toISOString() } : os
-  );
-}
+  addOrdensServico: (novasOS) => set((state) => ({
+    ordensServico: [...state.ordensServico, ...novasOS]
+  })),
+
+  updateOrdemServico: (id, updates) => set((state) => ({
+    ordensServico: state.ordensServico.map(os =>
+      os.id === id 
+        ? { ...os, ...updates, atualizadoEm: new Date().toISOString() } 
+        : os
+    )
+  })),
+
+  clearOrdensServico: () => set({ ordensServico: [] })
+}));
 
 export function getOrdemServicoById(id: string): OrdemServico | undefined {
-  return ordensServico.find(os => os.id === id);
+  return useOSStore.getState().ordensServico.find(os => os.id === id);
 }
 
 export function getOSByTecnico(tecnicoId: string): OrdemServico[] {
   const tecnico = USERS.find(u => u.id === tecnicoId);
   if (!tecnico) return [];
-  return ordensServico.filter(os => os.tecnico === tecnico.name);
+  return useOSStore.getState().ordensServico.filter(os => os.tecnico === tecnico.name);
 }
 
 export function getOSByContrato(contrato: string): OrdemServico[] {
-  return ordensServico.filter(os => os.contrato === contrato);
+  return useOSStore.getState().ordensServico.filter(os => os.contrato === contrato);
 }
 
 export function getContratos(): string[] {
+  const ordensServico = useOSStore.getState().ordensServico;
   const contratos = new Set(ordensServico.map(os => os.contrato));
   return Array.from(contratos);
 }
 
 export function getOSStats() {
+  const ordensServico = useOSStore.getState().ordensServico;
   const total = ordensServico.length;
   const emLevantamento = ordensServico.filter(os => os.situacao === 'Em Levantamento').length;
   const emElaboracao = ordensServico.filter(os => os.situacao === 'Em Elaboração').length;

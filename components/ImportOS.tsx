@@ -9,7 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Label } from './ui/label';
 import * as XLSX from 'xlsx';
 import { OrdemServico } from '../lib/types';
-import { addOrdensServico, getOrdensServico } from '../lib/store';
+import { useOSStore } from '../lib/store';
 
 interface ColumnMapping {
   os: string;
@@ -19,7 +19,11 @@ interface ColumnMapping {
   vencimento: string;
 }
 
-export function ImportOS() {
+interface ImportOSProps {
+  onNavigateToOS?: () => void;
+}
+
+export function ImportOS({ onNavigateToOS }: ImportOSProps) {
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'success'>('upload');
   const [fileName, setFileName] = useState('');
   const [rawData, setRawData] = useState<any[]>([]);
@@ -35,6 +39,8 @@ export function ImportOS() {
   const [isLoading, setIsLoading] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { addOrdensServico, ordensServico } = useOSStore();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -389,11 +395,14 @@ export function ImportOS() {
               <strong>{importedCount}</strong> Ordens de Serviço foram criadas com status "Fornecedor Acionado".
             </p>
             <p className="text-sm text-slate-500">
-              Total de O.S no sistema: <strong>{getOrdensServico().length}</strong>
+              Total de O.S no sistema: <strong>{ordensServico.length}</strong>
             </p>
             <div className="flex gap-4 mt-6">
               <Button variant="outline" onClick={resetImport}>Nova Importação</Button>
-              <Button className="bg-slate-900 text-white hover:bg-slate-800">
+              <Button 
+                className="bg-slate-900 text-white hover:bg-slate-800"
+                onClick={onNavigateToOS}
+              >
                 Ver Todas as O.S <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>

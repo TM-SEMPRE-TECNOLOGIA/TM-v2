@@ -61,9 +61,9 @@ function App() {
       case 'agenda':
         return <AgendaAndChecklist userRole={userRole} />;
       case 'work-orders':
-        return <WorkOrders userRole={userRole} />;
+        return <WorkOrders userRole={userRole} onNavigateToImport={() => setActiveTab('import')} />;
       case 'import':
-        return userRole === 'manager' ? <ImportOS /> : <MetricsAndResults userRole={userRole} />;
+        return userRole === 'manager' ? <ImportOS onNavigateToOS={() => setActiveTab('work-orders')} /> : <MetricsAndResults userRole={userRole} />;
       case 'difficulties':
         return userRole === 'manager' ? <DifficultyLog /> : <MetricsAndResults userRole={userRole} />;
       case 'reports':

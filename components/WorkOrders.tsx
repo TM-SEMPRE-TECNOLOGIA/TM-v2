@@ -16,20 +16,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Search, Plus, Filter, AlertCircle, CheckCircle2, Clock, ArrowRight, Building2, Calendar, FileSpreadsheet, Inbox } from 'lucide-react';
 import { WorkOrderDetails } from './WorkOrderDetails';
 import { UserRole, OrdemServico, USERS } from '../lib/types';
-import { getOrdensServico, getContratos, getOSStats } from '../lib/store';
+import { useOSStore, getContratos } from '../lib/store';
 
 interface WorkOrdersProps {
   userRole?: UserRole;
+  onNavigateToImport?: () => void;
 }
 
-export function WorkOrders({ userRole = 'manager' }: WorkOrdersProps) {
+export function WorkOrders({ userRole = 'manager', onNavigateToImport }: WorkOrdersProps) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContrato, setSelectedContrato] = useState<string>('all');
   
-  const ordensServico = getOrdensServico();
+  const ordensServico = useOSStore((state) => state.ordensServico);
   const contratos = getContratos();
-  const stats = getOSStats();
+
+  const getStats = () => {
+    const total = ordensServico.length;
+    const emLevantamento = ordensServico.filter(os => os.situacao === 'Em Levantamento').length;
+    const emOrcamento = ordensServico.filter(os => os.situacao === 'Em Orçamento').length;
+    const concluidas = ordensServico.filter(os => os.situacao === 'Concluída').length;
+    const fornecedorAcionado = ordensServico.filter(os => os.situacao === 'Fornecedor Acionado').length;
+    
+    return { total, emLevantamento, emOrcamento, concluidas, fornecedorAcionado };
+  };
+
+  const stats = getStats();
 
   const getFilteredOrders = () => {
     let filtered = ordensServico;
@@ -105,8 +117,11 @@ export function WorkOrders({ userRole = 'manager' }: WorkOrdersProps) {
                 }
               </p>
             </div>
-            {userRole === 'manager' && (
-              <Button className="bg-emerald-600 hover:bg-emerald-700 mt-4">
+            {userRole === 'manager' && onNavigateToImport && (
+              <Button 
+                className="bg-emerald-600 hover:bg-emerald-700 mt-4"
+                onClick={onNavigateToImport}
+              >
                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Ir para Importação
               </Button>
             )}
