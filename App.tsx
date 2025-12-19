@@ -24,6 +24,7 @@ import { Reports } from './components/Reports';
 import { Settings } from './components/Settings';
 import type { UserRole } from './lib/types';
 import { USERS } from './lib/types';
+import { Toaster } from './components/ui/toaster';
 
 function App() {
   const [userRole, setUserRole] = useState<UserRole>(null);
@@ -245,6 +246,7 @@ function App() {
           </div>
         </main>
       </div>
+      <Toaster />
     </div>
   );
 }
