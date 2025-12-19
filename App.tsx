@@ -10,7 +10,8 @@ import {
   FileSpreadsheet,
   FileText,
   LogOut,
-  Briefcase
+  Briefcase,
+  DollarSign
 } from 'lucide-react';
 import { MetricsAndResults } from './components/MetricsAndResults';
 import { TeamList } from './components/TeamList';
@@ -22,20 +23,23 @@ import { ImportOS } from './components/ImportOS';
 import { DifficultyLog } from './components/DifficultyLog';
 import { Reports } from './components/Reports';
 import { Settings } from './components/Settings';
+import { BalancoPreventivas } from './components/BalancoPreventivas';
 import type { UserRole } from './lib/types';
 import { USERS } from './lib/types';
 import { Toaster } from './components/ui/toaster';
 
 function App() {
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const handleLogin = (role: UserRole) => {
+  const handleLogin = (role: UserRole, id: string) => {
     setUserRole(role);
-    if (role === 'technician') {
+    setUserId(id);
+    if (role === 'elaborador') {
       setActiveTab('work-orders');
-    } else if (role === 'admin') {
+    } else if (role === 'contract_admin') {
       setActiveTab('work-orders');
     } else {
       setActiveTab('dashboard');
@@ -44,6 +48,7 @@ function App() {
 
   const handleLogout = () => {
     setUserRole(null);
+    setUserId(null);
     setActiveTab('dashboard');
   };
 
@@ -51,7 +56,7 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
-  const currentUser = USERS.find(u => u.role === userRole);
+  const currentUser = USERS.find(u => u.id === userId);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -69,6 +74,8 @@ function App() {
         return userRole === 'manager' ? <DifficultyLog /> : <MetricsAndResults userRole={userRole} />;
       case 'reports':
         return userRole === 'manager' ? <Reports /> : <MetricsAndResults userRole={userRole} />;
+      case 'balanco':
+        return (userRole === 'manager' || userRole === 'contract_admin') ? <BalancoPreventivas /> : <MetricsAndResults userRole={userRole} />;
       case 'settings':
         return <Settings userRole={userRole} />;
       default:
@@ -79,8 +86,8 @@ function App() {
   const getRoleColor = () => {
     switch (userRole) {
       case 'manager': return 'emerald';
-      case 'technician': return 'blue';
-      case 'admin': return 'purple';
+      case 'elaborador': return 'blue';
+      case 'contract_admin': return 'purple';
       default: return 'slate';
     }
   };
@@ -88,8 +95,8 @@ function App() {
   const getRoleLabel = () => {
     switch (userRole) {
       case 'manager': return 'Gerente';
-      case 'technician': return 'Técnico';
-      case 'admin': return 'Administrador';
+      case 'elaborador': return 'Elaborador';
+      case 'contract_admin': return 'Admin. Contratos';
       default: return '';
     }
   };
@@ -97,8 +104,8 @@ function App() {
   const getWorkOrdersLabel = () => {
     switch (userRole) {
       case 'manager': return 'Todas as O.S';
-      case 'technician': return 'Minhas O.S';
-      case 'admin': return 'O.S por Contrato';
+      case 'elaborador': return 'Minhas O.S';
+      case 'contract_admin': return 'O.S por Contrato';
       default: return 'O.S';
     }
   };
@@ -145,13 +152,23 @@ function App() {
             onClick={() => setActiveTab('work-orders')} 
           />
 
-          {(userRole === 'manager' || userRole === 'technician') && (
+          {(userRole === 'manager' || userRole === 'elaborador') && (
             <NavItem 
               icon={<CalendarDays size={20} />} 
               label="Agenda" 
               isActive={activeTab === 'agenda'} 
               isOpen={isSidebarOpen}
               onClick={() => setActiveTab('agenda')} 
+            />
+          )}
+
+          {(userRole === 'manager' || userRole === 'contract_admin') && (
+            <NavItem 
+              icon={<DollarSign size={20} />} 
+              label="Balanço" 
+              isActive={activeTab === 'balanco'} 
+              isOpen={isSidebarOpen}
+              onClick={() => setActiveTab('balanco')} 
             />
           )}
 
@@ -222,14 +239,15 @@ function App() {
             {activeTab === 'import' && 'Importação de O.S'}
             {activeTab === 'difficulties' && 'Registro de Dificuldades'}
             {activeTab === 'reports' && 'Relatórios Gerenciais'}
+            {activeTab === 'balanco' && 'Balanço das Preventivas'}
             {activeTab === 'settings' && 'Configurações'}
           </h2>
           <div className="flex items-center gap-4">
             <Notifications />
             <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold border cursor-pointer transition-colors
               ${userRole === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : ''}
-              ${userRole === 'technician' ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200' : ''}
-              ${userRole === 'admin' ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' : ''}
+              ${userRole === 'elaborador' ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200' : ''}
+              ${userRole === 'contract_admin' ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' : ''}
             `}>
               {currentUser?.initials || 'U'}
             </div>

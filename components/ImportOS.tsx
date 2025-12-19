@@ -8,7 +8,7 @@ import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, X, ArrowRight, Load
 import { ScrollArea } from './ui/scroll-area';
 import { Label } from './ui/label';
 import * as XLSX from 'xlsx';
-import { OrdemServico, OSStatus } from '../lib/types';
+import { OrdemServico, OSStatus, USERS, TECNICOS } from '../lib/types';
 import { useOSStore } from '../lib/store';
 import { useToast } from '../hooks/use-toast';
 
@@ -352,6 +352,28 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
     return String(value);
   };
 
+  const findElaboradorId = (name: string | null): string | null => {
+    if (!name) return null;
+    const nameLower = name.toLowerCase().trim();
+    const elaborador = USERS.filter(u => u.role === 'elaborador').find(u => 
+      u.name.toLowerCase() === nameLower || 
+      u.name.toLowerCase().includes(nameLower) ||
+      nameLower.includes(u.name.toLowerCase())
+    );
+    return elaborador?.id || null;
+  };
+
+  const findTecnicoId = (name: string | null): string | null => {
+    if (!name) return null;
+    const nameLower = name.toLowerCase().trim();
+    const tecnico = TECNICOS.find(t => 
+      t.nome.toLowerCase() === nameLower || 
+      t.nome.toLowerCase().includes(nameLower) ||
+      nameLower.includes(t.nome.toLowerCase())
+    );
+    return tecnico?.id || null;
+  };
+
   const handleConfirmImport = () => {
     const newOrdens: OrdemServico[] = previewData.map((item, index) => ({
       id: `${Date.now()}-${index}`,
@@ -362,11 +384,16 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
       vencimento: item.vencimento,
       situacao: item.situacao,
       elaborador: item.elaborador || null,
+      elaboradorId: findElaboradorId(item.elaborador),
       tecnico: item.tecnico || null,
+      tecnicoId: findTecnicoId(item.tecnico),
       agendamento: null,
       dataLevantamento: null,
       valorLevantamento: null,
+      valorOrcado: null,
       valorAprovado: null,
+      dataAprovacao: null,
+      aprovadoPor: null,
       anexos: [],
       dificuldades: [],
       criadoEm: new Date().toISOString(),

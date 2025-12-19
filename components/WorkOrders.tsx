@@ -47,13 +47,13 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
   const getFilteredOrders = () => {
     let filtered = ordensServico;
 
-    if (userRole === 'technician' && currentUser) {
+    if (userRole === 'elaborador' && currentUser) {
       filtered = filtered.filter(os => 
-        os.tecnico === currentUser.name || os.elaborador === currentUser.name
+        os.elaboradorId === currentUser.id || os.elaborador === currentUser.name
       );
     }
 
-    if (userRole === 'admin') {
+    if (userRole === 'contract_admin') {
       if (selectedContrato && selectedContrato !== 'all') {
         filtered = filtered.filter(os => os.contrato === selectedContrato);
       }
@@ -76,8 +76,8 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
   const getTitle = () => {
     switch (userRole) {
       case 'manager': return 'Todas as O.S';
-      case 'technician': return 'Minhas O.S';
-      case 'admin': return 'O.S por Contrato';
+      case 'elaborador': return 'Minhas O.S';
+      case 'contract_admin': return 'O.S por Contrato';
       default: return 'Ordens de Serviço';
     }
   };
@@ -85,8 +85,8 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
   const getSubtitle = () => {
     switch (userRole) {
       case 'manager': return 'Gestão completa das Ordens de Serviço por Contrato e Agência.';
-      case 'technician': return 'Lista de OS onde você atua como Técnico ou Elaborador.';
-      case 'admin': return 'Filtre por contrato para gerenciar aprovações e conclusões.';
+      case 'elaborador': return 'Lista de OS onde você atua como Elaborador responsável.';
+      case 'contract_admin': return 'Filtre por contrato para preencher valores aprovados.';
       default: return '';
     }
   };
@@ -177,7 +177,7 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
               Ordens de Serviço ({displayedOrders.length})
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              {userRole === 'admin' && contratos.length > 0 && (
+              {userRole === 'contract_admin' && contratos.length > 0 && (
                 <Select value={selectedContrato} onValueChange={setSelectedContrato}>
                   <SelectTrigger className="w-[250px]">
                     <SelectValue placeholder="Filtrar por contrato" />
@@ -265,7 +265,7 @@ function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSel
           <TableHead>Vencimento</TableHead>
           <TableHead>Responsáveis</TableHead>
           <TableHead>Situação</TableHead>
-          {userRole === 'admin' && <TableHead>Valor</TableHead>}
+          {userRole === 'contract_admin' && <TableHead>Valor</TableHead>}
           <TableHead className="text-right"></TableHead>
         </TableRow>
       </TableHeader>
@@ -307,15 +307,15 @@ function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSel
             <TableCell>
               <StatusBadge status={order.situacao} />
             </TableCell>
-            {userRole === 'admin' && (
+            {userRole === 'contract_admin' && (
               <TableCell>
                 {order.valorAprovado ? (
                   <span className="font-medium text-emerald-600">
                     R$ {order.valorAprovado.toLocaleString('pt-BR')}
                   </span>
-                ) : order.valorLevantamento ? (
+                ) : order.valorOrcado ? (
                   <span className="text-slate-500">
-                    R$ {order.valorLevantamento.toLocaleString('pt-BR')}
+                    R$ {order.valorOrcado.toLocaleString('pt-BR')}
                   </span>
                 ) : (
                   <span className="text-slate-400">-</span>

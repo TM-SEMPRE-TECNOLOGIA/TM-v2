@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { OrdemServico, USERS } from './types';
+import { OrdemServico, USERS, TECNICOS } from './types';
 
 interface OSState {
   ordensServico: OrdemServico[];
@@ -36,10 +36,20 @@ export function getOrdemServicoById(id: string): OrdemServico | undefined {
   return useOSStore.getState().ordensServico.find(os => os.id === id);
 }
 
+export function getOSByElaborador(elaboradorId: string): OrdemServico[] {
+  const elaborador = USERS.find(u => u.id === elaboradorId);
+  if (!elaborador) return [];
+  return useOSStore.getState().ordensServico.filter(os => 
+    os.elaboradorId === elaboradorId || os.elaborador === elaborador.name
+  );
+}
+
 export function getOSByTecnico(tecnicoId: string): OrdemServico[] {
-  const tecnico = USERS.find(u => u.id === tecnicoId);
+  const tecnico = TECNICOS.find(t => t.id === tecnicoId);
   if (!tecnico) return [];
-  return useOSStore.getState().ordensServico.filter(os => os.tecnico === tecnico.name);
+  return useOSStore.getState().ordensServico.filter(os => 
+    os.tecnicoId === tecnicoId || os.tecnico === tecnico.nome
+  );
 }
 
 export function getOSByContrato(contrato: string): OrdemServico[] {
