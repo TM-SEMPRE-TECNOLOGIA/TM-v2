@@ -75,6 +75,13 @@ The application follows a feature-based component organization:
 - **tailwind-merge**: Tailwind class deduplication
 - **class-variance-authority**: Component variant management
 
+### State Management
+- **Zustand**: Global state management for reactive data updates
+- Store located in `/lib/store.ts` with typed state and actions
+- Components consume state reactively using `useOSStore` hook
+- Prepared for future Supabase integration with async actions
+
 ### Data Storage
-- Currently uses mock data (no backend/database integration)
-- Data structures prepared for future API integration with work orders, team members, contracts, and equipment
+- Currently uses in-memory state via Zustand (no backend/database yet)
+- Data structures prepared for future Supabase integration with work orders, team members, contracts, and equipment
+- Excel/CSV import functionality implemented using xlsx library
