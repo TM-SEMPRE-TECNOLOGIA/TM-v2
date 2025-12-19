@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
   DollarSign, 
@@ -10,14 +11,81 @@ import {
   Building2,
   Users,
   FileEdit,
-  BarChart3
+  BarChart3,
+  Download,
+  FileDown
 } from 'lucide-react';
 import { useOSStore, getContratos } from '../lib/store';
 import { USERS, TECNICOS } from '../lib/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { useToast } from '../hooks/use-toast';
 
 export function BalancoPreventivas() {
   const ordensServico = useOSStore((state) => state.ordensServico);
+  const { toast } = useToast();
+
+  const handleExportCSV = (data: any[], filename: string, headers: string[]) => {
+    const rows = data.map(item => headers.map(h => {
+      const value = item[h.toLowerCase().replace(/ /g, '')];
+      if (typeof value === 'number') return value.toFixed(2).replace('.', ',');
+      return value || '';
+    }));
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Exportação concluída",
+      description: `O arquivo ${filename}.csv foi baixado com sucesso.`
+    });
+  };
+
+  const exportBalancoContrato = () => {
+    const headers = ['Contrato', 'Quantidade', 'Aprovadas', 'ValorOrcado', 'ValorAprovado', 'Diferenca'];
+    const data = porContrato.map(c => ({
+      contrato: c.contrato,
+      quantidade: c.quantidade,
+      aprovadas: c.aprovadas,
+      valororcado: c.valorOrcado,
+      valoraprovado: c.valorAprovado,
+      diferenca: c.diferenca
+    }));
+    handleExportCSV(data, 'balanco_contrato', headers);
+  };
+
+  const exportBalancoTecnico = () => {
+    const headers = ['Tecnico', 'Quantidade', 'Aprovadas', 'ValorOrcado', 'ValorAprovado', 'Diferenca'];
+    const data = porTecnico.map(t => ({
+      tecnico: t.nome,
+      quantidade: t.quantidade,
+      aprovadas: t.aprovadas,
+      valororcado: t.valorOrcado,
+      valoraprovado: t.valorAprovado,
+      diferenca: t.diferenca
+    }));
+    handleExportCSV(data, 'balanco_tecnico', headers);
+  };
+
+  const exportBalancoElaborador = () => {
+    const headers = ['Elaborador', 'Quantidade', 'Aprovadas', 'ValorOrcado', 'ValorAprovado', 'Diferenca'];
+    const data = porElaborador.map(e => ({
+      elaborador: e.nome,
+      quantidade: e.quantidade,
+      aprovadas: e.aprovadas,
+      valororcado: e.valorOrcado,
+      valoraprovado: e.valorAprovado,
+      diferenca: e.diferenca
+    }));
+    handleExportCSV(data, 'balanco_elaborador', headers);
+  };
 
   const stats = useMemo(() => {
     const osComValor = ordensServico.filter(os => os.valorAprovado !== null);
@@ -151,9 +219,22 @@ export function BalancoPreventivas() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Balanço das Preventivas</h2>
-        <p className="text-slate-500">Análise financeira das ordens de serviço por contrato, técnico e elaborador.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Balanço das Preventivas</h2>
+          <p className="text-slate-500">Análise financeira das ordens de serviço por contrato, técnico e elaborador.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportBalancoContrato} className="gap-2">
+            <FileDown size={16} /> Exportar Contratos
+          </Button>
+          <Button variant="outline" onClick={exportBalancoTecnico} className="gap-2">
+            <FileDown size={16} /> Exportar Técnicos
+          </Button>
+          <Button variant="outline" onClick={exportBalancoElaborador} className="gap-2">
+            <FileDown size={16} /> Exportar Elaboradores
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

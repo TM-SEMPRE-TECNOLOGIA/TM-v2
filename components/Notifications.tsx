@@ -1,50 +1,111 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from './ui/popover';
 import { Button } from './ui/button';
-import { Bell, Clock, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
+import { Bell, Clock, CheckCircle2, AlertTriangle, FileText, Calendar } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
+import { useOSStore } from '../lib/store';
+import { parseISO, isBefore, addDays, differenceInDays, format } from 'date-fns';
 
-// Mock Notifications baseadas nas regras de negócio
-const notifications = [
-  {
-    id: 1,
-    title: 'Prazo de Relatório Expirando',
-    message: 'OS-98235 vence em 2 dias (Regra 15 dias).',
-    time: '2 horas atrás',
-    type: 'warning',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'Nova Atribuição',
-    message: 'Você foi definido como Elaborador da OS-98240.',
-    time: '5 horas atrás',
-    type: 'info',
-    read: false
-  },
-  {
-    id: 3,
-    title: 'Valor Aprovado',
-    message: 'Alexandre aprovou o orçamento da OS-98210.',
-    time: '1 dia atrás',
-    type: 'success',
-    read: true
-  },
-   {
-    id: 4,
-    title: 'Nova Dificuldade Registrada',
-    message: 'Danilo reportou problema de acesso na Agência Central.',
-    time: '1 dia atrás',
-    type: 'warning',
-    read: true
-  }
-];
+interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: 'warning' | 'success' | 'info';
+  read: boolean;
+}
 
 export function Notifications() {
+  const ordensServico = useOSStore((state) => state.ordensServico);
+
+  const notifications = useMemo(() => {
+    const notifs: NotificationItem[] = [];
+    const now = new Date();
+
+    ordensServico.forEach(os => {
+      if (!os.vencimento || os.situacao === 'Concluída') return;
+
+      try {
+        const vencimento = parseISO(os.vencimento);
+        const diasRestantes = differenceInDays(vencimento, now);
+
+        const agenciaStr = (os.agencia || '').substring(0, 30);
+        if (diasRestantes < 0) {
+          notifs.push({
+            id: `atrasada-${os.id}`,
+            title: 'O.S Atrasada',
+            message: `${os.os} está ${Math.abs(diasRestantes)} dias atrasada - ${agenciaStr}`,
+            time: format(vencimento, 'dd/MM/yyyy'),
+            type: 'warning',
+            read: false
+          });
+        } else if (diasRestantes <= 3) {
+          notifs.push({
+            id: `urgente-${os.id}`,
+            title: 'Prazo Expirando',
+            message: `${os.os} vence em ${diasRestantes} dia(s) - ${agenciaStr}`,
+            time: format(vencimento, 'dd/MM/yyyy'),
+            type: 'warning',
+            read: false
+          });
+        } else if (diasRestantes <= 7) {
+          notifs.push({
+            id: `alerta-${os.id}`,
+            title: 'Vencimento Próximo',
+            message: `${os.os} vence em ${diasRestantes} dias`,
+            time: format(vencimento, 'dd/MM/yyyy'),
+            type: 'info',
+            read: true
+          });
+        }
+      } catch {}
+
+      if (os.valorAprovado && os.dataAprovacao) {
+        try {
+          const dataAprov = parseISO(os.dataAprovacao);
+          if (differenceInDays(now, dataAprov) <= 3) {
+            notifs.push({
+              id: `aprovado-${os.id}`,
+              title: 'Valor Aprovado',
+              message: `${os.os} teve orçamento aprovado: R$ ${os.valorAprovado.toFixed(2)}`,
+              time: format(dataAprov, 'dd/MM/yyyy'),
+              type: 'success',
+              read: true
+            });
+          }
+        } catch {}
+      }
+
+      if (os.dificuldades && os.dificuldades.length > 0) {
+        const lastDif = os.dificuldades[os.dificuldades.length - 1];
+        try {
+          const dataDif = parseISO(lastDif.dataHora);
+          if (differenceInDays(now, dataDif) <= 2) {
+            notifs.push({
+              id: `dif-${lastDif.id}`,
+              title: 'Nova Dificuldade',
+              message: `${os.os} - ${(lastDif.texto || '').substring(0, 40)}...`,
+              time: format(dataDif, 'dd/MM/yyyy'),
+              type: 'warning',
+              read: false
+            });
+          }
+        } catch {}
+      }
+    });
+
+    notifs.sort((a, b) => {
+      if (a.read !== b.read) return a.read ? 1 : -1;
+      return 0;
+    });
+
+    return notifs.slice(0, 10);
+  }, [ordensServico]);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -64,41 +125,50 @@ export function Notifications() {
         </div>
         <ScrollArea className="h-[300px]">
           <div className="flex flex-col">
-            {notifications.map((notif) => (
-              <div 
-                key={notif.id} 
-                className={`p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3
-                  ${!notif.read ? 'bg-blue-50/30' : ''}
-                `}
-              >
-                <div className={`mt-1 p-1.5 rounded-full h-fit
-                  ${notif.type === 'warning' ? 'bg-amber-100 text-amber-600' : 
-                    notif.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 
-                    'bg-blue-100 text-blue-600'}
-                `}>
-                  {notif.type === 'warning' ? <AlertTriangle size={14} /> : 
-                   notif.type === 'success' ? <CheckCircle2 size={14} /> : 
-                   <FileText size={14} />}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium text-slate-900 leading-none">{notif.title}</p>
-                  <p className="text-xs text-slate-500">{notif.message}</p>
-                  <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                    <Clock size={10} /> {notif.time}
-                  </p>
-                </div>
-                {!notif.read && (
-                  <div className="w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                )}
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-slate-400">
+                <Bell size={32} className="mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Nenhuma notificação</p>
               </div>
-            ))}
+            ) : (
+              notifications.map((notif) => (
+                <div 
+                  key={notif.id} 
+                  className={`p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3
+                    ${!notif.read ? 'bg-blue-50/30' : ''}
+                  `}
+                >
+                  <div className={`mt-1 p-1.5 rounded-full h-fit
+                    ${notif.type === 'warning' ? 'bg-amber-100 text-amber-600' : 
+                      notif.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 
+                      'bg-blue-100 text-blue-600'}
+                  `}>
+                    {notif.type === 'warning' ? <AlertTriangle size={14} /> : 
+                     notif.type === 'success' ? <CheckCircle2 size={14} /> : 
+                     <Calendar size={14} />}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium text-slate-900 leading-none">{notif.title}</p>
+                    <p className="text-xs text-slate-500">{notif.message}</p>
+                    <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <Clock size={10} /> {notif.time}
+                    </p>
+                  </div>
+                  {!notif.read && (
+                    <div className="w-2 h-2 mt-2 rounded-full bg-blue-500" />
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </ScrollArea>
-        <div className="p-2 border-t border-slate-100 text-center">
-          <Button variant="ghost" size="sm" className="text-xs text-slate-500 w-full h-8">
-            Marcar todas como lidas
-          </Button>
-        </div>
+        {notifications.length > 0 && (
+          <div className="p-2 border-t border-slate-100 text-center">
+            <Button variant="ghost" size="sm" className="text-xs text-slate-500 w-full h-8">
+              Marcar todas como lidas
+            </Button>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

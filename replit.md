@@ -143,7 +143,18 @@ interface OrdemServico {
 
 ## Recent Changes
 
-### December 2024
+### December 2024 (Latest)
+- **WorkOrders**: Full CRUD with "Nova O.S" modal, status filters, table/card view toggle
+- **WorkOrderDetails**: Complete editing with status, values, technician/elaborador assignment, difficulty logging
+- **AgendaAndChecklist**: Functional calendar with month navigation, real O.S data by due date, day selection
+- **BalancoPreventivas**: CSV export buttons for contracts, technicians, and elaboradores
+- **Reports**: Real O.S data with comprehensive filters (date, contract, status, technician, elaborador), CSV export
+- **TeamList**: Displays USERS and TECNICOS with statistics cards and "Add Member" modal
+- **DifficultyLog**: Uses real dificuldades from O.S with search functionality
+- **Notifications**: Dynamic notifications based on O.S due dates and recent difficulties
+- All components now consume real data from Zustand store with reactive updates
+
+### December 2024 (Earlier)
 - Restructured user roles: Manager, Elaborador, Contract Admin (Technicians don't access system)
 - Added TECNICOS list in types.ts for technician assignment
 - Created BalancoPreventivas page with financial analysis by contract, technician, and elaborador

@@ -13,10 +13,12 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, Plus, Filter, AlertCircle, CheckCircle2, Clock, ArrowRight, Building2, Calendar, FileSpreadsheet, Inbox } from 'lucide-react';
+import { Label } from './ui/label';
+import { Search, Plus, Filter, AlertCircle, CheckCircle2, Clock, ArrowRight, Building2, Calendar, FileSpreadsheet, Inbox, X } from 'lucide-react';
 import { WorkOrderDetails } from './WorkOrderDetails';
-import { UserRole, OrdemServico, USERS } from '../lib/types';
+import { UserRole, OrdemServico, USERS, TECNICOS, OSStatus } from '../lib/types';
 import { useOSStore, getContratos } from '../lib/store';
+import { useToast } from '../hooks/use-toast';
 
 interface WorkOrdersProps {
   userRole?: UserRole;
@@ -24,13 +26,86 @@ interface WorkOrdersProps {
   onNavigateToImport?: () => void;
 }
 
+interface NovaOSForm {
+  os: string;
+  prefixo: string;
+  agencia: string;
+  contrato: string;
+  vencimento: string;
+  tecnicoId: string;
+  elaboradorId: string;
+}
+
+const initialFormState: NovaOSForm = {
+  os: '',
+  prefixo: '',
+  agencia: '',
+  contrato: '',
+  vencimento: '',
+  tecnicoId: '',
+  elaboradorId: ''
+};
+
 export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImport }: WorkOrdersProps) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContrato, setSelectedContrato] = useState<string>('all');
+  const [showNovaOS, setShowNovaOS] = useState(false);
+  const [novaOSForm, setNovaOSForm] = useState<NovaOSForm>(initialFormState);
   
   const ordensServico = useOSStore((state) => state.ordensServico);
+  const addOrdensServico = useOSStore((state) => state.addOrdensServico);
   const contratos = getContratos();
+  const { toast } = useToast();
+
+  const elaboradores = USERS.filter(u => u.role === 'elaborador');
+
+  const handleNovaOS = () => {
+    if (!novaOSForm.os || !novaOSForm.agencia || !novaOSForm.contrato) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha ao menos O.S, Agência e Contrato.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const tecnico = TECNICOS.find(t => t.id === novaOSForm.tecnicoId);
+    const elaborador = USERS.find(u => u.id === novaOSForm.elaboradorId);
+
+    const novaOS: OrdemServico = {
+      id: Date.now().toString(),
+      os: novaOSForm.os,
+      prefixo: novaOSForm.prefixo,
+      agencia: novaOSForm.agencia,
+      contrato: novaOSForm.contrato,
+      vencimento: novaOSForm.vencimento,
+      situacao: 'Fornecedor Acionado',
+      elaborador: elaborador?.name || null,
+      elaboradorId: novaOSForm.elaboradorId || null,
+      tecnico: tecnico?.nome || null,
+      tecnicoId: novaOSForm.tecnicoId || null,
+      agendamento: null,
+      dataLevantamento: null,
+      valorLevantamento: null,
+      valorOrcado: null,
+      valorAprovado: null,
+      dataAprovacao: null,
+      aprovadoPor: null,
+      anexos: [],
+      dificuldades: [],
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString()
+    };
+
+    addOrdensServico([novaOS]);
+    setNovaOSForm(initialFormState);
+    setShowNovaOS(false);
+    toast({
+      title: "O.S criada",
+      description: `A ordem de serviço ${novaOS.os} foi criada com sucesso.`
+    });
+  };
 
   const getStats = () => {
     const total = ordensServico.length;
@@ -137,7 +212,7 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
           <p className="text-slate-500">{getSubtitle()}</p>
         </div>
         {userRole === 'manager' && (
-          <Button className="bg-emerald-600 hover:bg-emerald-700">
+          <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowNovaOS(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nova OS
           </Button>
         )}
@@ -239,8 +314,116 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
         <WorkOrderDetails 
           orderId={selectedOrderId} 
           userRole={userRole}
+          currentUser={currentUser}
           onClose={() => setSelectedOrderId(null)} 
         />
+      )}
+
+      {showNovaOS && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg animate-in zoom-in-95 duration-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-lg">Nova Ordem de Serviço</CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setShowNovaOS(false)}>
+                <X size={18} />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Número da O.S *</Label>
+                  <Input 
+                    placeholder="Ex: 12345"
+                    value={novaOSForm.os}
+                    onChange={(e) => setNovaOSForm(prev => ({ ...prev, os: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Prefixo</Label>
+                  <Input 
+                    placeholder="Ex: 9794"
+                    value={novaOSForm.prefixo}
+                    onChange={(e) => setNovaOSForm(prev => ({ ...prev, prefixo: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Agência *</Label>
+                <Input 
+                  placeholder="Nome da agência ou local"
+                  value={novaOSForm.agencia}
+                  onChange={(e) => setNovaOSForm(prev => ({ ...prev, agencia: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Contrato *</Label>
+                <Input 
+                  placeholder="Nome do contrato"
+                  value={novaOSForm.contrato}
+                  onChange={(e) => setNovaOSForm(prev => ({ ...prev, contrato: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Data de Vencimento</Label>
+                <Input 
+                  type="date"
+                  value={novaOSForm.vencimento}
+                  onChange={(e) => setNovaOSForm(prev => ({ ...prev, vencimento: e.target.value }))}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Técnico</Label>
+                  <Select 
+                    value={novaOSForm.tecnicoId || '__none__'} 
+                    onValueChange={(v) => setNovaOSForm(prev => ({ ...prev, tecnicoId: v === '__none__' ? '' : v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Não definido</SelectItem>
+                      {TECNICOS.map(tec => (
+                        <SelectItem key={tec.id} value={tec.id}>{tec.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Elaborador</Label>
+                  <Select 
+                    value={novaOSForm.elaboradorId || '__none__'} 
+                    onValueChange={(v) => setNovaOSForm(prev => ({ ...prev, elaboradorId: v === '__none__' ? '' : v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Não definido</SelectItem>
+                      {elaboradores.map(elab => (
+                        <SelectItem key={elab.id} value={elab.id}>{elab.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowNovaOS(false)}>
+                  Cancelar
+                </Button>
+                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleNovaOS}>
+                  <Plus className="mr-2 h-4 w-4" /> Criar O.S
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
