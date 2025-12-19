@@ -20,10 +20,11 @@ import { useOSStore, getContratos } from '../lib/store';
 
 interface WorkOrdersProps {
   userRole?: UserRole;
+  currentUser?: typeof USERS[0];
   onNavigateToImport?: () => void;
 }
 
-export function WorkOrders({ userRole = 'manager', onNavigateToImport }: WorkOrdersProps) {
+export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImport }: WorkOrdersProps) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContrato, setSelectedContrato] = useState<string>('all');
@@ -46,13 +47,10 @@ export function WorkOrders({ userRole = 'manager', onNavigateToImport }: WorkOrd
   const getFilteredOrders = () => {
     let filtered = ordensServico;
 
-    if (userRole === 'technician') {
-      const tecnico = USERS.find(u => u.role === 'technician');
-      if (tecnico) {
-        filtered = filtered.filter(os => 
-          os.tecnico === tecnico.name || os.elaborador === tecnico.name
-        );
-      }
+    if (userRole === 'technician' && currentUser) {
+      filtered = filtered.filter(os => 
+        os.tecnico === currentUser.name || os.elaborador === currentUser.name
+      );
     }
 
     if (userRole === 'admin') {
