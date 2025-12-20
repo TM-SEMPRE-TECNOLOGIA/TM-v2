@@ -516,7 +516,10 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
               isDragging ? 'bg-emerald-100 scale-110' : 'bg-white'
             }`}>
               {isLoading ? (
-                <Loader2 className="h-10 w-10 text-emerald-600 animate-spin" />
+                <Loader2 
+                  className="h-10 w-10 text-emerald-600" 
+                  style={{ animation: 'spin 1s linear infinite' }}
+                />
               ) : (
                 <Upload className={`h-10 w-10 ${isDragging ? 'text-emerald-700' : 'text-emerald-600'}`} />
               )}
