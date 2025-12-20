@@ -292,7 +292,7 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
         const prefixo = mapping.prefixo ? String(row[parseInt(mapping.prefixo)] || '').trim() : '';
         const agencia = String(row[parseInt(mapping.agencia)] || '').trim();
         const contrato = String(row[parseInt(mapping.contrato)] || '').trim();
-        const vencimento = mapping.vencimento ? formatDate(row[parseInt(mapping.vencimento)]) : '';
+        const vencimento = mapping.vencimento ? formatDateToISO(row[parseInt(mapping.vencimento)]) : '';
         const tecnico = mapping.tecnico ? String(row[parseInt(mapping.tecnico)] || '').trim() : '';
         const elaborador = mapping.elaborador ? String(row[parseInt(mapping.elaborador)] || '').trim() : '';
         
@@ -337,19 +337,55 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
     setStep('preview');
   };
 
-  const formatDate = (value: any): string => {
+  const formatDateToISO = (value: any): string => {
     if (!value) return '';
+    
     if (typeof value === 'number') {
       try {
         const date = XLSX.SSF.parse_date_code(value);
         if (date) {
-          return `${String(date.d).padStart(2, '0')}/${String(date.m).padStart(2, '0')}/${date.y}`;
+          const d = new Date(date.y, date.m - 1, date.d);
+          return d.toISOString().split('T')[0];
         }
       } catch {
-        return String(value);
+        return '';
       }
     }
-    return String(value);
+    
+    const strValue = String(value).trim();
+    
+    const brMatch = strValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (brMatch) {
+      const [, day, month, year] = brMatch;
+      const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+      }
+    }
+    
+    const brMatch2 = strValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+    if (brMatch2) {
+      const [, day, month, year2d] = brMatch2;
+      const fullYear = parseInt(year2d) > 50 ? 1900 + parseInt(year2d) : 2000 + parseInt(year2d);
+      const d = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+      }
+    }
+    
+    const isoMatch = strValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      return strValue.substring(0, 10);
+    }
+    
+    try {
+      const d = new Date(strValue);
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+      }
+    } catch {}
+    
+    return '';
   };
 
   const findElaboradorId = (name: string | null): string | null => {
