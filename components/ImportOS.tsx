@@ -187,50 +187,52 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      setTimeout(() => {
+        try {
+          const data = e.target?.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
 
-        if (jsonData.length < 2) {
+          if (jsonData.length < 2) {
+            toast({
+              title: "Arquivo vazio",
+              description: "O arquivo deve conter pelo menos cabeçalho e dados.",
+              variant: "destructive"
+            });
+            setIsLoading(false);
+            return;
+          }
+
+          const { headerIndex: detectedHeaderIndex, headers: detectedHeaders } = detectHeaderRow(jsonData);
+          
+          setHeaderIndex(detectedHeaderIndex);
+          setHeaders(detectedHeaders);
+          setRawData(jsonData.slice(detectedHeaderIndex + 1));
+          
+          const autoMapping = autoMapColumns(detectedHeaders);
+          setMapping(autoMapping);
+
+          const autoMappedCount = Object.values(autoMapping).filter(v => v !== '').length;
+          if (autoMappedCount > 0) {
+            toast({
+              title: "Colunas detectadas",
+              description: `${autoMappedCount} colunas foram mapeadas automaticamente.`,
+            });
+          }
+
+          setStep('mapping');
+        } catch (error) {
+          console.error('Erro ao ler arquivo:', error);
           toast({
-            title: "Arquivo vazio",
-            description: "O arquivo deve conter pelo menos cabeçalho e dados.",
+            title: "Erro na leitura",
+            description: "Não foi possível ler o arquivo. Verifique se é um Excel válido.",
             variant: "destructive"
           });
-          setIsLoading(false);
-          return;
         }
-
-        const { headerIndex: detectedHeaderIndex, headers: detectedHeaders } = detectHeaderRow(jsonData);
-        
-        setHeaderIndex(detectedHeaderIndex);
-        setHeaders(detectedHeaders);
-        setRawData(jsonData.slice(detectedHeaderIndex + 1));
-        
-        const autoMapping = autoMapColumns(detectedHeaders);
-        setMapping(autoMapping);
-
-        const autoMappedCount = Object.values(autoMapping).filter(v => v !== '').length;
-        if (autoMappedCount > 0) {
-          toast({
-            title: "Colunas detectadas",
-            description: `${autoMappedCount} colunas foram mapeadas automaticamente.`,
-          });
-        }
-
-        setStep('mapping');
-      } catch (error) {
-        console.error('Erro ao ler arquivo:', error);
-        toast({
-          title: "Erro na leitura",
-          description: "Não foi possível ler o arquivo. Verifique se é um Excel válido.",
-          variant: "destructive"
-        });
-      }
-      setIsLoading(false);
+        setIsLoading(false);
+      }, 100);
     };
     
     reader.readAsBinaryString(file);
