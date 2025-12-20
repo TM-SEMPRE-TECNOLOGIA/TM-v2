@@ -13,7 +13,7 @@ import {
   Briefcase,
   DollarSign
 } from 'lucide-react';
-import { MetricsAndResults } from './components/MetricsAndResults';
+import { Dashboard } from './components/Dashboard';
 import { TeamList } from './components/TeamList';
 import { AgendaAndChecklist } from './components/AgendaAndChecklist';
 import { WorkOrders } from './components/WorkOrders';
@@ -61,25 +61,25 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <MetricsAndResults userRole={userRole} />;
+        return <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'team':
-        return userRole === 'manager' ? <TeamList /> : <MetricsAndResults userRole={userRole} />;
+        return userRole === 'manager' ? <TeamList /> : <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'agenda':
-        return <AgendaAndChecklist userRole={userRole} />;
+        return <AgendaAndChecklist userRole={userRole} currentUser={currentUser} />;
       case 'work-orders':
         return <WorkOrders userRole={userRole} currentUser={currentUser} onNavigateToImport={() => setActiveTab('import')} />;
       case 'import':
-        return userRole === 'manager' ? <ImportOS onNavigateToOS={() => setActiveTab('work-orders')} /> : <MetricsAndResults userRole={userRole} />;
+        return userRole === 'manager' ? <ImportOS onNavigateToOS={() => setActiveTab('work-orders')} /> : <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'difficulties':
-        return userRole === 'manager' ? <DifficultyLog /> : <MetricsAndResults userRole={userRole} />;
+        return userRole === 'manager' ? <DifficultyLog /> : <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'reports':
-        return userRole === 'manager' ? <Reports /> : <MetricsAndResults userRole={userRole} />;
+        return userRole === 'manager' ? <Reports /> : <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'balanco':
-        return (userRole === 'manager' || userRole === 'contract_admin') ? <BalancoPreventivas /> : <MetricsAndResults userRole={userRole} />;
+        return (userRole === 'manager' || userRole === 'contract_admin') ? <BalancoPreventivas /> : <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'settings':
         return <Settings userRole={userRole} />;
       default:
-        return <MetricsAndResults userRole={userRole} />;
+        return <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
     }
   };
 

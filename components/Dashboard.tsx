@@ -13,9 +13,10 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import { AlertTriangle, CheckCircle, Clock, Wrench, FileText, TrendingUp } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Wrench, FileText, TrendingUp, Upload, Database } from 'lucide-react';
+import { Button } from './ui/button';
 import { useOSStore } from '../lib/store';
-import { format, parseISO, isAfter, isBefore, addDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, parseISO, isAfter, isBefore, addDays, startOfMonth, endOfMonth, subMonths, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,8 +29,22 @@ const STATUS_COLORS: Record<string, string> = {
   'Mudança de Contrato': '#6b7280',
 };
 
-export function Dashboard() {
+interface DashboardProps {
+  onNavigateToImport?: () => void;
+}
+
+export function Dashboard({ onNavigateToImport }: DashboardProps) {
   const ordensServico = useOSStore((state) => state.ordensServico);
+
+  const parseDate = (dateStr: string | null | undefined): Date | null => {
+    if (!dateStr) return null;
+    try {
+      const parsed = parseISO(dateStr);
+      return isValid(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  };
 
   const stats = useMemo(() => {
     const hoje = new Date();
@@ -39,25 +54,17 @@ export function Dashboard() {
     
     const atrasadas = ordensServico.filter(os => {
       if (os.situacao === 'Concluída') return false;
-      if (!os.vencimento) return false;
-      try {
-        const vencimento = parseISO(os.vencimento);
-        return isBefore(vencimento, hoje);
-      } catch {
-        return false;
-      }
+      const vencimento = parseDate(os.vencimento);
+      if (!vencimento) return false;
+      return isBefore(vencimento, hoje);
     }).length;
 
     const urgentes = ordensServico.filter(os => {
       if (os.situacao === 'Concluída') return false;
-      if (!os.vencimento) return false;
-      try {
-        const vencimento = parseISO(os.vencimento);
-        const em7Dias = addDays(hoje, 7);
-        return isAfter(vencimento, hoje) && isBefore(vencimento, em7Dias);
-      } catch {
-        return false;
-      }
+      const vencimento = parseDate(os.vencimento);
+      if (!vencimento) return false;
+      const em7Dias = addDays(hoje, 7);
+      return isAfter(vencimento, hoje) && isBefore(vencimento, em7Dias);
     }).length;
 
     const taxaConclusao = total > 0 ? ((concluidas / total) * 100).toFixed(1) : '0';
@@ -66,6 +73,8 @@ export function Dashboard() {
   }, [ordensServico]);
 
   const pieData = useMemo(() => {
+    if (ordensServico.length === 0) return [];
+    
     const statusCounts: Record<string, number> = {};
     ordensServico.forEach(os => {
       statusCounts[os.situacao] = (statusCounts[os.situacao] || 0) + 1;
@@ -79,6 +88,8 @@ export function Dashboard() {
   }, [ordensServico]);
 
   const barData = useMemo(() => {
+    if (ordensServico.length === 0) return [];
+    
     const hoje = new Date();
     const meses: { name: string; month: Date }[] = [];
     
@@ -95,13 +106,9 @@ export function Dashboard() {
       const fimMes = endOfMonth(month);
       
       const osMes = ordensServico.filter(os => {
-        if (!os.criadoEm) return false;
-        try {
-          const data = parseISO(os.criadoEm);
-          return isAfter(data, inicioMes) && isBefore(data, fimMes);
-        } catch {
-          return false;
-        }
+        const data = parseDate(os.criadoEm);
+        if (!data) return false;
+        return isAfter(data, inicioMes) && isBefore(data, fimMes);
       });
 
       const concluidas = osMes.filter(os => os.situacao === 'Concluída').length;
@@ -116,52 +123,126 @@ export function Dashboard() {
   }, [ordensServico]);
 
   const tarefasUrgentes = useMemo(() => {
+    if (ordensServico.length === 0) return [];
+    
     const hoje = new Date();
     const em7Dias = addDays(hoje, 7);
 
     return ordensServico
       .filter(os => {
         if (os.situacao === 'Concluída') return false;
-        if (!os.vencimento) return false;
-        try {
-          const vencimento = parseISO(os.vencimento);
-          return isBefore(vencimento, em7Dias);
-        } catch {
-          return false;
-        }
+        const vencimento = parseDate(os.vencimento);
+        if (!vencimento) return false;
+        return isBefore(vencimento, em7Dias);
       })
       .sort((a, b) => {
-        const dataA = a.vencimento ? parseISO(a.vencimento).getTime() : 0;
-        const dataB = b.vencimento ? parseISO(b.vencimento).getTime() : 0;
+        const dataA = parseDate(a.vencimento)?.getTime() || 0;
+        const dataB = parseDate(b.vencimento)?.getTime() || 0;
         return dataA - dataB;
       })
       .slice(0, 5);
   }, [ordensServico]);
 
   const formatVencimento = (vencimento: string) => {
-    try {
-      const data = parseISO(vencimento);
-      const hoje = new Date();
-      const diffDias = Math.ceil((data.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffDias < 0) {
-        return { texto: `Atrasada ${Math.abs(diffDias)} dia(s)`, cor: 'text-red-600' };
-      } else if (diffDias === 0) {
-        return { texto: 'Vence hoje', cor: 'text-red-600' };
-      } else if (diffDias === 1) {
-        return { texto: 'Vence amanhã', cor: 'text-amber-600' };
-      } else {
-        return { texto: `Vence em ${diffDias} dias`, cor: 'text-amber-600' };
-      }
-    } catch {
-      return { texto: 'Data inválida', cor: 'text-slate-500' };
+    const data = parseDate(vencimento);
+    if (!data) return { texto: 'Sem data', cor: 'text-slate-500' };
+    
+    const hoje = new Date();
+    const diffDias = Math.ceil((data.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDias < 0) {
+      return { texto: `Atrasada ${Math.abs(diffDias)} dia(s)`, cor: 'text-red-600' };
+    } else if (diffDias === 0) {
+      return { texto: 'Vence hoje', cor: 'text-red-600' };
+    } else if (diffDias === 1) {
+      return { texto: 'Vence amanhã', cor: 'text-amber-600' };
+    } else {
+      return { texto: `Vence em ${diffDias} dias`, cor: 'text-amber-600' };
     }
   };
 
   const totalPie = pieData.reduce((sum, item) => sum + item.value, 0);
 
+  const contratos = useMemo(() => {
+    const set = new Set(ordensServico.map(os => os.contrato));
+    return Array.from(set);
+  }, [ordensServico]);
+
+  if (ordensServico.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h2>
+            <p className="text-slate-500">Visão geral das ordens de serviço</p>
+          </div>
+        </div>
+
+        <Card className="border-dashed border-2 border-slate-300">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+            <div className="p-4 rounded-full bg-slate-100">
+              <Database className="h-12 w-12 text-slate-400" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-slate-900">Nenhuma O.S importada</h3>
+              <p className="text-slate-500 max-w-md">
+                O Dashboard exibe dados exclusivamente das ordens de serviço que você importar.
+                Importe uma planilha para começar a visualizar métricas e gráficos.
+              </p>
+            </div>
+            {onNavigateToImport && (
+              <Button 
+                onClick={onNavigateToImport}
+                className="bg-emerald-600 hover:bg-emerald-700 mt-4"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Importar Planilha
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 opacity-50">
+          <StatsCard 
+            title="Total de O.S" 
+            value="0" 
+            description="Nenhuma importada"
+            icon={<FileText className="text-slate-400" />}
+          />
+          <StatsCard 
+            title="Taxa de Conclusão" 
+            value="0%" 
+            description="0 em andamento"
+            icon={<CheckCircle className="text-slate-400" />}
+          />
+          <StatsCard 
+            title="Ordens Abertas" 
+            value="0" 
+            description="0 vencendo em 7 dias"
+            icon={<Wrench className="text-slate-400" />}
+          />
+          <StatsCard 
+            title="Atrasadas" 
+            value="0" 
+            description="Nenhuma atrasada"
+            icon={<AlertTriangle className="text-slate-400" />}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h2>
+          <p className="text-slate-500">
+            {stats.total} O.S importadas • {contratos.length} contrato(s)
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard 
           title="Total de O.S" 
@@ -197,7 +278,7 @@ export function Dashboard() {
             <CardDescription>Concluídas vs Pendentes (Últimos 6 meses)</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            {ordensServico.length > 0 ? (
+            {barData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={barData}
@@ -217,7 +298,7 @@ export function Dashboard() {
               <div className="h-full flex items-center justify-center text-slate-400">
                 <div className="text-center">
                   <TrendingUp size={48} className="mx-auto mb-2 opacity-50" />
-                  <p>Importe O.S para ver o gráfico</p>
+                  <p>Dados insuficientes para o gráfico</p>
                 </div>
               </div>
             )}
@@ -230,7 +311,7 @@ export function Dashboard() {
             <CardDescription>Distribuição atual por situação</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] flex items-center justify-center relative">
-            {ordensServico.length > 0 ? (
+            {pieData.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -295,8 +376,8 @@ export function Dashboard() {
                         <Clock size={20} />
                       </div>
                       <div>
-                        <h4 className="font-medium text-slate-900">O.S {os.os} - {os.prefixo}</h4>
-                        <p className="text-sm text-slate-500">{os.agencia} • {os.contrato}</p>
+                        <h4 className="font-medium text-slate-900">O.S {os.os} - {os.prefixo || 'Sem prefixo'}</h4>
+                        <p className="text-sm text-slate-500">{os.agencia || 'Sem agência'} • {os.contrato || 'Sem contrato'}</p>
                         <p className={`text-xs font-medium mt-1 ${vencInfo.cor}`}>{vencInfo.texto}</p>
                       </div>
                     </div>
