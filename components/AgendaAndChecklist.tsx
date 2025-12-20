@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Checkbox } from './ui/checkbox';
+import { ChevronLeft, ChevronRight, Clock, AlertTriangle, CheckCircle2, ListTodo } from 'lucide-react';
 import { UserRole, USERS } from '../lib/types';
 import { useOSStore } from '../lib/store';
 import { 
@@ -10,14 +11,14 @@ import {
   startOfMonth, 
   endOfMonth, 
   eachDayOfInterval, 
-  isSameMonth, 
   isSameDay,
   addMonths, 
   subMonths,
   parseISO,
   getDay,
   isToday,
-  isBefore
+  isBefore,
+  addDays
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -197,6 +198,8 @@ export function AgendaAndChecklist({ userRole = 'manager', currentUser }: Agenda
             <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-500"></div> Em Orçamento</div>
             <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div> Atrasada</div>
           </div>
+
+          <ChecklistSection ordensServico={filteredOS} userRole={userRole} />
         </div>
 
         <div className="w-full lg:w-96 space-y-4">
@@ -275,5 +278,184 @@ export function AgendaAndChecklist({ userRole = 'manager', currentUser }: Agenda
         </div>
       </div>
     </div>
+  );
+}
+
+interface ChecklistItem {
+  id: string;
+  osId: string;
+  osNumber: string;
+  text: string;
+  completed: boolean;
+  dueDate: string;
+  priority: 'alta' | 'media' | 'baixa';
+}
+
+function ChecklistSection({ ordensServico, userRole }: { ordensServico: any[], userRole: UserRole }) {
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  
+  const checklistItems = useMemo(() => {
+    const hoje = new Date();
+    const em7Dias = addDays(hoje, 7);
+    const items: ChecklistItem[] = [];
+    
+    ordensServico
+      .filter(os => os.situacao !== 'Concluída')
+      .forEach(os => {
+        if (!os.vencimento) return;
+        
+        try {
+          const vencimento = parseISO(os.vencimento);
+          const isAtrasada = isBefore(vencimento, hoje);
+          const isUrgente = isBefore(vencimento, em7Dias);
+          
+          if (isAtrasada) {
+            items.push({
+              id: `atrasada-${os.id}`,
+              osId: os.id,
+              osNumber: os.os,
+              text: `O.S ${os.os} - Atrasada! Prazo: ${format(vencimento, 'dd/MM', { locale: ptBR })}`,
+              completed: checkedItems.has(`atrasada-${os.id}`),
+              dueDate: os.vencimento,
+              priority: 'alta'
+            });
+          } else if (isUrgente) {
+            items.push({
+              id: `urgente-${os.id}`,
+              osId: os.id,
+              osNumber: os.os,
+              text: `O.S ${os.os} - Vence em ${format(vencimento, 'dd/MM', { locale: ptBR })}`,
+              completed: checkedItems.has(`urgente-${os.id}`),
+              dueDate: os.vencimento,
+              priority: 'media'
+            });
+          }
+          
+          if (os.situacao === 'Em Levantamento') {
+            items.push({
+              id: `levantamento-${os.id}`,
+              osId: os.id,
+              osNumber: os.os,
+              text: `O.S ${os.os} - Finalizar levantamento`,
+              completed: checkedItems.has(`levantamento-${os.id}`),
+              dueDate: os.vencimento,
+              priority: 'media'
+            });
+          }
+          
+          if (os.situacao === 'Em Elaboração') {
+            items.push({
+              id: `elaboracao-${os.id}`,
+              osId: os.id,
+              osNumber: os.os,
+              text: `O.S ${os.os} - Concluir elaboração do relatório`,
+              completed: checkedItems.has(`elaboracao-${os.id}`),
+              dueDate: os.vencimento,
+              priority: 'media'
+            });
+          }
+          
+          if (os.situacao === 'Em Orçamento') {
+            items.push({
+              id: `orcamento-${os.id}`,
+              osId: os.id,
+              osNumber: os.os,
+              text: `O.S ${os.os} - Aguardando aprovação do orçamento`,
+              completed: checkedItems.has(`orcamento-${os.id}`),
+              dueDate: os.vencimento,
+              priority: 'baixa'
+            });
+          }
+          
+          if (os.situacao === 'Com Dificuldade') {
+            items.push({
+              id: `dificuldade-${os.id}`,
+              osId: os.id,
+              osNumber: os.os,
+              text: `O.S ${os.os} - Resolver dificuldade pendente`,
+              completed: checkedItems.has(`dificuldade-${os.id}`),
+              dueDate: os.vencimento,
+              priority: 'alta'
+            });
+          }
+        } catch {}
+      });
+    
+    const priorityOrder = { 'alta': 0, 'media': 1, 'baixa': 2 };
+    return items
+      .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+      .slice(0, 8);
+  }, [ordensServico, checkedItems]);
+  
+  const toggleItem = (id: string) => {
+    setCheckedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+  
+  const getPriorityStyle = (priority: string) => {
+    switch (priority) {
+      case 'alta': return 'border-l-red-500 bg-red-50';
+      case 'media': return 'border-l-amber-500 bg-amber-50';
+      default: return 'border-l-blue-500 bg-blue-50';
+    }
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <ListTodo className="h-5 w-5 text-emerald-600" />
+          <CardTitle className="text-lg">Checklist de Tarefas</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {checklistItems.length === 0 ? (
+          <div className="text-center py-6 text-slate-400">
+            <CheckCircle2 size={40} className="mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Nenhuma tarefa pendente</p>
+          </div>
+        ) : (
+          checklistItems.map((item) => (
+            <div 
+              key={item.id}
+              className={`flex items-center gap-3 p-3 rounded-lg border-l-4 transition-all ${
+                getPriorityStyle(item.priority)
+              } ${item.completed ? 'opacity-50' : ''}`}
+            >
+              <Checkbox 
+                id={item.id}
+                checked={item.completed}
+                onCheckedChange={() => toggleItem(item.id)}
+              />
+              <label 
+                htmlFor={item.id}
+                className={`flex-1 text-sm cursor-pointer ${
+                  item.completed ? 'line-through text-slate-400' : 'text-slate-700'
+                }`}
+              >
+                {item.text}
+              </label>
+              <Badge 
+                variant="outline" 
+                className={`text-[10px] ${
+                  item.priority === 'alta' ? 'border-red-300 text-red-600' :
+                  item.priority === 'media' ? 'border-amber-300 text-amber-600' :
+                  'border-blue-300 text-blue-600'
+                }`}
+              >
+                {item.priority === 'alta' ? 'Urgente' : item.priority === 'media' ? 'Atenção' : 'Normal'}
+              </Badge>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
   );
 }
