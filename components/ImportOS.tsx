@@ -184,55 +184,68 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
 
     setIsLoading(true);
     setFileName(file.name);
+    const startTime = Date.now();
+    const MIN_LOADING_TIME = 1200;
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      setTimeout(() => {
-        try {
-          const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      const finishLoading = (callback: () => void) => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+        setTimeout(() => {
+          setIsLoading(false);
+          callback();
+        }, remaining);
+      };
 
-          if (jsonData.length < 2) {
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+        if (jsonData.length < 2) {
+          finishLoading(() => {
             toast({
               title: "Arquivo vazio",
               description: "O arquivo deve conter pelo menos cabeçalho e dados.",
               variant: "destructive"
             });
-            setIsLoading(false);
-            return;
-          }
+          });
+          return;
+        }
 
-          const { headerIndex: detectedHeaderIndex, headers: detectedHeaders } = detectHeaderRow(jsonData);
-          
-          setHeaderIndex(detectedHeaderIndex);
-          setHeaders(detectedHeaders);
-          setRawData(jsonData.slice(detectedHeaderIndex + 1));
-          
-          const autoMapping = autoMapColumns(detectedHeaders);
-          setMapping(autoMapping);
+        const { headerIndex: detectedHeaderIndex, headers: detectedHeaders } = detectHeaderRow(jsonData);
+        
+        setHeaderIndex(detectedHeaderIndex);
+        setHeaders(detectedHeaders);
+        setRawData(jsonData.slice(detectedHeaderIndex + 1));
+        
+        const autoMapping = autoMapColumns(detectedHeaders);
+        setMapping(autoMapping);
 
-          const autoMappedCount = Object.values(autoMapping).filter(v => v !== '').length;
+        const autoMappedCount = Object.values(autoMapping).filter(v => v !== '').length;
+        
+        finishLoading(() => {
           if (autoMappedCount > 0) {
             toast({
               title: "Colunas detectadas",
               description: `${autoMappedCount} colunas foram mapeadas automaticamente.`,
             });
           }
-
           setStep('mapping');
-        } catch (error) {
-          console.error('Erro ao ler arquivo:', error);
+        });
+      } catch (error) {
+        console.error('Erro ao ler arquivo:', error);
+        finishLoading(() => {
           toast({
             title: "Erro na leitura",
             description: "Não foi possível ler o arquivo. Verifique se é um Excel válido.",
             variant: "destructive"
           });
-        }
-        setIsLoading(false);
-      }, 100);
+        });
+      }
     };
     
     reader.readAsBinaryString(file);
