@@ -18,6 +18,10 @@ author = "agent"
 task = "workflow.run"
 args = "dev server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "backend server"
+
 [[workflows.workflow]]
 name = "dev server"
 author = "agent"
@@ -29,6 +33,22 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "backend server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run server"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
 
 [[ports]]
 localPort = 5000

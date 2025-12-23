@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart2, 
   Users, 
@@ -27,12 +27,18 @@ import { BalancoPreventivas } from './components/BalancoPreventivas';
 import type { UserRole } from './lib/types';
 import { USERS } from './lib/types';
 import { Toaster } from './components/ui/toaster';
+import { useOSStore } from './lib/store';
 
 function App() {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const fetchOrdensServico = useOSStore(state => state.fetchOrdensServico);
+
+  useEffect(() => {
+    fetchOrdensServico();
+  }, [fetchOrdensServico]);
 
   const handleLogin = (role: UserRole, id: string) => {
     setUserRole(role);

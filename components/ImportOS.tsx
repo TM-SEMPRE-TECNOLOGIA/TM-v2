@@ -159,7 +159,7 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { addOrdensServico, ordensServico } = useOSStore();
+  const { importOrdensServico, ordensServico } = useOSStore();
   const { toast } = useToast();
 
   const processFile = useCallback((file: File) => {
@@ -415,9 +415,10 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
     return tecnico?.id || null;
   };
 
-  const handleConfirmImport = () => {
-    const newOrdens: OrdemServico[] = previewData.map((item, index) => ({
-      id: `${Date.now()}-${index}`,
+  const handleConfirmImport = async () => {
+    setIsLoading(true);
+    
+    const newOrdens: Partial<OrdemServico>[] = previewData.map((item) => ({
       os: item.os,
       prefixo: item.prefixo,
       agencia: item.agencia,
@@ -428,52 +429,57 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
       elaboradorId: findElaboradorId(item.elaborador),
       tecnico: item.tecnico || null,
       tecnicoId: findTecnicoId(item.tecnico),
-      agendamento: null,
-      dataLevantamento: null,
-      valorLevantamento: null,
       valorOrcado: null,
       valorAprovado: null,
       dataAprovacao: null,
       aprovadoPor: null,
-      anexos: [],
       dificuldades: [],
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString()
     }));
 
-    addOrdensServico(newOrdens);
+    try {
+      const apiResult = await importOrdensServico(newOrdens);
 
-    const result: ImportResult = {
-      ...importResult!,
-      imported: newOrdens.length
-    };
-    setImportResult(result);
+      const result: ImportResult = {
+        ...importResult!,
+        imported: apiResult.imported
+      };
+      setImportResult(result);
 
-    toast({
-      title: "Importação concluída!",
-      description: `${newOrdens.length} O.S importadas com sucesso.`,
-    });
+      toast({
+        title: "Importação concluída!",
+        description: `${apiResult.imported} O.S importadas e salvas no banco de dados.`,
+      });
 
-    if (result.enhancements.length > 0) {
-      setTimeout(() => {
-        toast({
-          title: "Normalizações aplicadas",
-          description: `${result.enhancements.length} campos foram normalizados automaticamente.`,
-        });
-      }, 1000);
+      if (result.enhancements.length > 0) {
+        setTimeout(() => {
+          toast({
+            title: "Normalizações aplicadas",
+            description: `${result.enhancements.length} campos foram normalizados automaticamente.`,
+          });
+        }, 1000);
+      }
+
+      if (result.warnings.length > 0) {
+        setTimeout(() => {
+          toast({
+            title: "Avisos",
+            description: `${result.warnings.length} linhas com campos em branco.`,
+            variant: "destructive"
+          });
+        }, 2000);
+      }
+
+      setStep('success');
+    } catch (error) {
+      console.error('Erro ao importar:', error);
+      toast({
+        title: "Erro na importação",
+        description: "Não foi possível salvar os dados no banco. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    if (result.warnings.length > 0) {
-      setTimeout(() => {
-        toast({
-          title: "Avisos",
-          description: `${result.warnings.length} linhas com campos em branco.`,
-          variant: "destructive"
-        });
-      }, 2000);
-    }
-
-    setStep('success');
   };
 
   const resetImport = () => {

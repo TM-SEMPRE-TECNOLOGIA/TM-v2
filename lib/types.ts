@@ -66,15 +66,16 @@ export interface OrdemServico {
   elaboradorId: string | null;
   tecnico: string | null;
   tecnicoId: string | null;
-  agendamento: string | null;
-  dataLevantamento: string | null;
-  valorLevantamento: number | null;
+  agendamento?: string | null;
+  dataLevantamento?: string | null;
+  valorLevantamento?: number | null;
   valorOrcado: number | null;
   valorAprovado: number | null;
   dataAprovacao: string | null;
   aprovadoPor: string | null;
-  anexos: string[];
+  observacoes?: string;
+  anexos?: string[];
   dificuldades: Dificuldade[];
-  criadoEm: string;
-  atualizadoEm: string;
+  criadoEm?: string;
+  atualizadoEm?: string;
 }
