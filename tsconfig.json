@@ -18,7 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@assets/*": ["./attached_assets/*"]
+      "@assets/*": ["./attached_assets/*"],
+      "@shared/*": ["./shared/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
