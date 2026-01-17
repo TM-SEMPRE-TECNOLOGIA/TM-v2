@@ -46,6 +46,27 @@ const initialFormState: NovaOSForm = {
   elaboradorId: ''
 };
 
+const OB = {
+  background: '#f0f8ff',
+  foreground: '#374151',
+  card: '#ffffff',
+  cardForeground: '#374151',
+  primary: '#22c55e',
+  primaryForeground: '#ffffff',
+  secondary: '#e0f2fe',
+  secondaryForeground: '#4b5563',
+  muted: '#f3f4f6',
+  mutedForeground: '#6b7280',
+  accent: '#d1fae5',
+  accentForeground: '#374151',
+  border: '#e5e7eb',
+  ring: '#22c55e',
+  chart1: '#22c55e',
+  chart2: '#10b981',
+  chart3: '#059669',
+  destructive: '#ef4444'
+};
+
 export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImport }: WorkOrdersProps) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,6 +140,37 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
 
   const stats = getStats();
 
+  const statusCards = [
+    {
+      title: 'Fornecedor Acionado',
+      value: stats.fornecedorAcionado,
+      accent: '#3b82f6',
+      accentBg: 'rgba(59, 130, 246, 0.12)',
+      icon: <Clock className="h-5 w-5" style={{ color: '#3b82f6' }} />
+    },
+    {
+      title: 'Em Levantamento',
+      value: stats.emLevantamento,
+      accent: '#f59e0b',
+      accentBg: 'rgba(245, 158, 11, 0.12)',
+      icon: <CheckCircle2 className="h-5 w-5" style={{ color: '#f59e0b' }} />
+    },
+    {
+      title: 'Em OrÇõamento',
+      value: stats.emOrcamento,
+      accent: '#8b5cf6',
+      accentBg: 'rgba(139, 92, 246, 0.12)',
+      icon: <Clock className="h-5 w-5" style={{ color: '#8b5cf6' }} />
+    },
+    {
+      title: 'ConcluÇðdas',
+      value: stats.concluidas,
+      accent: OB.chart1,
+      accentBg: 'rgba(34, 197, 94, 0.12)',
+      icon: <CheckCircle2 className="h-5 w-5" style={{ color: OB.chart1 }} />
+    }
+  ];
+
   const getFilteredOrders = () => {
     let filtered = ordensServico;
 
@@ -171,19 +223,25 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">{getTitle()}</h2>
-            <p className="text-slate-500">{getSubtitle()}</p>
+            <h2 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>{getTitle()}</h2>
+            <p style={{ color: OB.mutedForeground }}>{getSubtitle()}</p>
           </div>
         </div>
 
-        <Card className="border-dashed border-2">
+        <Card style={{
+          background: OB.card,
+          border: `2px dashed ${OB.border}`,
+          borderRadius: '16px'
+        }}>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <div className="p-4 bg-slate-100 rounded-full">
-              <Inbox className="h-10 w-10 text-slate-400" />
+            <div className="p-4 rounded-full" style={{
+              background: `linear-gradient(135deg, ${OB.secondary}, ${OB.accent})`
+            }}>
+              <Inbox className="h-10 w-10" style={{ color: OB.secondaryForeground }} />
             </div>
             <div className="space-y-1">
-              <h3 className="font-semibold text-lg text-slate-700">Nenhuma O.S cadastrada</h3>
-              <p className="text-sm text-slate-500 max-w-md">
+              <h3 className="font-semibold text-lg" style={{ color: OB.foreground }}>Nenhuma O.S cadastrada</h3>
+              <p className="text-sm max-w-md" style={{ color: OB.mutedForeground }}>
                 {userRole === 'manager' 
                   ? 'Importe uma planilha de O.S para começar a gestão.'
                   : 'Aguarde a importação de O.S pelo gerente.'
@@ -192,7 +250,14 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
             </div>
             {userRole === 'manager' && onNavigateToImport && (
               <Button 
-                className="bg-emerald-600 hover:bg-emerald-700 mt-4"
+                className="mt-4"
+                style={{
+                  background: `linear-gradient(135deg, ${OB.primary}, ${OB.chart2})`,
+                  color: OB.primaryForeground,
+                  borderRadius: '10px',
+                  padding: '12px 24px',
+                  fontWeight: 600
+                }}
                 onClick={onNavigateToImport}
               >
                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Ir para Importação
@@ -208,53 +273,53 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">{getTitle()}</h2>
-          <p className="text-slate-500">{getSubtitle()}</p>
+          <h2 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>{getTitle()}</h2>
+          <p style={{ color: OB.mutedForeground }}>{getSubtitle()}</p>
         </div>
         {userRole === 'manager' && (
-          <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowNovaOS(true)}>
+          <Button
+            onClick={() => setShowNovaOS(true)}
+            style={{
+              background: `linear-gradient(135deg, ${OB.primary}, ${OB.chart2})`,
+              color: OB.primaryForeground,
+              borderRadius: '10px',
+              padding: '10px 18px',
+              fontWeight: 600
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" /> Nova OS
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatusCard 
-          title="Fornecedor Acionado" 
-          value={stats.fornecedorAcionado} 
-          color="bg-blue-50" 
-          icon={<Clock className="text-blue-500" />} 
-        />
-        <StatusCard 
-          title="Em Levantamento" 
-          value={stats.emLevantamento} 
-          color="bg-amber-50" 
-          icon={<CheckCircle2 className="text-amber-500" />} 
-        />
-        <StatusCard 
-          title="Em Orçamento" 
-          value={stats.emOrcamento} 
-          color="bg-purple-50" 
-          icon={<Clock className="text-purple-500" />} 
-        />
-        <StatusCard 
-          title="Concluídas" 
-          value={stats.concluidas} 
-          color="bg-emerald-50" 
-          icon={<CheckCircle2 className="text-emerald-500" />} 
-        />
+        {statusCards.map((card) => (
+          <StatusCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            accent={card.accent}
+            accentBg={card.accentBg}
+            icon={card.icon}
+          />
+        ))}
       </div>
 
-      <Card>
+      <Card style={{
+        background: OB.card,
+        border: `1px solid ${OB.border}`,
+        borderRadius: '16px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+      }}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <CardTitle className="text-lg font-medium">
+            <CardTitle className="text-lg font-medium" style={{ color: OB.foreground }}>
               Ordens de Serviço ({displayedOrders.length})
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
               {userRole === 'contract_admin' && contratos.length > 0 && (
                 <Select value={selectedContrato} onValueChange={setSelectedContrato}>
-                  <SelectTrigger className="w-[250px]">
+                  <SelectTrigger className="w-[250px]" style={{ background: OB.background }}>
                     <SelectValue placeholder="Filtrar por contrato" />
                   </SelectTrigger>
                   <SelectContent>
@@ -266,10 +331,11 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
                 </Select>
               )}
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4" style={{ color: OB.mutedForeground }} />
                 <Input
                   placeholder="Buscar OS, Agência..."
                   className="pl-9 w-[250px]"
+                  style={{ background: OB.background, borderColor: OB.border }}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -279,7 +345,15 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="mb-4">
+            <TabsList
+              className="mb-4"
+              style={{
+                background: OB.secondary,
+                borderRadius: '999px',
+                padding: '4px',
+                border: `1px solid ${OB.border}`
+              }}
+            >
               <TabsTrigger value="all">Todas</TabsTrigger>
               <TabsTrigger value="active">Em Aberto</TabsTrigger>
               <TabsTrigger value="completed">Concluídas</TabsTrigger>
@@ -320,10 +394,18 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
       )}
 
       {showNovaOS && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card
+            className="w-full max-w-lg animate-in zoom-in-95 duration-200"
+            style={{
+              background: OB.card,
+              border: `1px solid ${OB.border}`,
+              borderRadius: '16px',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.2)'
+            }}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg">Nova Ordem de Serviço</CardTitle>
+              <CardTitle className="text-lg" style={{ color: OB.foreground }}>Nova Ordem de Serviço</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setShowNovaOS(false)}>
                 <X size={18} />
               </Button>
@@ -417,7 +499,16 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
                 <Button variant="outline" onClick={() => setShowNovaOS(false)}>
                   Cancelar
                 </Button>
-                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleNovaOS}>
+                <Button
+                  onClick={handleNovaOS}
+                  style={{
+                    background: `linear-gradient(135deg, ${OB.primary}, ${OB.chart2})`,
+                    color: OB.primaryForeground,
+                    borderRadius: '10px',
+                    padding: '10px 18px',
+                    fontWeight: 600
+                  }}
+                >
                   <Plus className="mr-2 h-4 w-4" /> Criar O.S
                 </Button>
               </div>
@@ -432,7 +523,7 @@ export function WorkOrders({ userRole = 'manager', currentUser, onNavigateToImpo
 function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSelect: (id: string) => void, userRole?: UserRole }) {
   if (data.length === 0) {
     return (
-      <div className="text-center py-10 text-slate-500">
+      <div className="text-center py-10" style={{ color: OB.mutedForeground }}>
         Nenhum registro encontrado.
       </div>
     );
@@ -442,13 +533,13 @@ function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSel
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[100px]">OS</TableHead>
-          <TableHead>Agência / Prefixo</TableHead>
-          <TableHead>Contrato</TableHead>
-          <TableHead>Vencimento</TableHead>
-          <TableHead>Responsáveis</TableHead>
-          <TableHead>Situação</TableHead>
-          {userRole === 'contract_admin' && <TableHead>Valor</TableHead>}
+          <TableHead className="w-[100px]" style={{ color: OB.mutedForeground }}>OS</TableHead>
+          <TableHead style={{ color: OB.mutedForeground }}>Agência / Prefixo</TableHead>
+          <TableHead style={{ color: OB.mutedForeground }}>Contrato</TableHead>
+          <TableHead style={{ color: OB.mutedForeground }}>Vencimento</TableHead>
+          <TableHead style={{ color: OB.mutedForeground }}>Responsáveis</TableHead>
+          <TableHead style={{ color: OB.mutedForeground }}>Situação</TableHead>
+          {userRole === 'contract_admin' && <TableHead style={{ color: OB.mutedForeground }}>Valor</TableHead>}
           <TableHead className="text-right"></TableHead>
         </TableRow>
       </TableHeader>
@@ -456,35 +547,35 @@ function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSel
         {data.map((order) => (
           <TableRow 
             key={order.id} 
-            className="cursor-pointer hover:bg-slate-50 transition-colors"
+            className="cursor-pointer hover:bg-emerald-50/50 transition-colors"
             onClick={() => onSelect(order.id)}
           >
-            <TableCell className="font-medium text-emerald-700">{order.os}</TableCell>
+            <TableCell className="font-medium" style={{ color: OB.chart2 }}>{order.os}</TableCell>
             <TableCell>
               <div className="flex flex-col">
-                <span className="font-medium text-slate-700">{order.agencia}</span>
+                <span className="font-medium" style={{ color: OB.foreground }}>{order.agencia}</span>
                 {order.prefixo && (
-                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <span className="text-xs flex items-center gap-1" style={{ color: OB.mutedForeground }}>
                     <Building2 size={10} /> {order.prefixo}
                   </span>
                 )}
               </div>
             </TableCell>
-            <TableCell className="text-sm text-slate-600">{order.contrato}</TableCell>
+            <TableCell className="text-sm" style={{ color: OB.secondaryForeground }}>{order.contrato}</TableCell>
             <TableCell>
               {order.vencimento ? (
                 <div className="flex items-center gap-2 text-sm">
-                  <Calendar size={14} className="text-slate-400" />
+                  <Calendar size={14} style={{ color: OB.mutedForeground }} />
                   {order.vencimento}
                 </div>
               ) : (
-                <span className="text-slate-400">-</span>
+                <span style={{ color: OB.mutedForeground }}>-</span>
               )}
             </TableCell>
             <TableCell>
               <div className="flex flex-col text-xs">
-                <span><span className="text-slate-500">Téc:</span> {order.tecnico || '-'}</span>
-                <span><span className="text-slate-500">Elab:</span> {order.elaborador || '-'}</span>
+                <span><span style={{ color: OB.mutedForeground }}>Téc:</span> {order.tecnico || '-'}</span>
+                <span><span style={{ color: OB.mutedForeground }}>Elab:</span> {order.elaborador || '-'}</span>
               </div>
             </TableCell>
             <TableCell>
@@ -493,21 +584,21 @@ function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSel
             {userRole === 'contract_admin' && (
               <TableCell>
                 {order.valorAprovado ? (
-                  <span className="font-medium text-emerald-600">
+                  <span className="font-medium" style={{ color: OB.chart2 }}>
                     R$ {order.valorAprovado.toLocaleString('pt-BR')}
                   </span>
                 ) : order.valorOrcado ? (
-                  <span className="text-slate-500">
+                  <span style={{ color: OB.mutedForeground }}>
                     R$ {order.valorOrcado.toLocaleString('pt-BR')}
                   </span>
                 ) : (
-                  <span className="text-slate-400">-</span>
+                  <span style={{ color: OB.mutedForeground }}>-</span>
                 )}
               </TableCell>
             )}
             <TableCell className="text-right">
                <Button variant="ghost" size="icon">
-                 <ArrowRight size={16} className="text-slate-400" />
+                 <ArrowRight size={16} style={{ color: OB.mutedForeground }} />
                </Button>
             </TableCell>
           </TableRow>
@@ -518,33 +609,49 @@ function OrdersTable({ data, onSelect, userRole }: { data: OrdemServico[], onSel
 }
 
 function StatusBadge({ status }: { status: string }) {
-   const styles: Record<string, string> = {
-    'Fornecedor Acionado': "bg-blue-100 text-blue-700 border-blue-200",
-    'Em Levantamento': "bg-amber-100 text-amber-700 border-amber-200",
-    'Em Elaboração': "bg-orange-100 text-orange-700 border-orange-200",
-    'Em Orçamento': "bg-purple-100 text-purple-700 border-purple-200",
-    'Concluída': "bg-emerald-100 text-emerald-700 border-emerald-200",
-    'Com Dificuldade': "bg-red-100 text-red-700 border-red-200",
-    'Mudança de Contrato': "bg-pink-100 text-pink-700 border-pink-200"
+  const styles: Record<string, { background: string; color: string; border: string }> = {
+    'Fornecedor Acionado': { background: 'rgba(59, 130, 246, 0.12)', color: '#1d4ed8', border: 'rgba(59, 130, 246, 0.3)' },
+    'Em Levantamento': { background: 'rgba(245, 158, 11, 0.12)', color: '#b45309', border: 'rgba(245, 158, 11, 0.3)' },
+    'Em Elabora��ǜo': { background: 'rgba(249, 115, 22, 0.12)', color: '#c2410c', border: 'rgba(249, 115, 22, 0.3)' },
+    'Em Or��amento': { background: 'rgba(139, 92, 246, 0.12)', color: '#6d28d9', border: 'rgba(139, 92, 246, 0.3)' },
+    'Conclu��da': { background: 'rgba(34, 197, 94, 0.12)', color: OB.chart2, border: 'rgba(34, 197, 94, 0.3)' },
+    'Com Dificuldade': { background: 'rgba(239, 68, 68, 0.12)', color: OB.destructive, border: 'rgba(239, 68, 68, 0.3)' },
+    'Mudan��a de Contrato': { background: 'rgba(148, 163, 184, 0.2)', color: OB.mutedForeground, border: 'rgba(148, 163, 184, 0.35)' }
   };
-  
-  const style = styles[status] || "bg-slate-100 text-slate-700";
+
+  const style = styles[status] || { background: OB.muted, color: OB.mutedForeground, border: OB.border };
 
   return (
-    <Badge variant="outline" className={`${style} whitespace-nowrap`}>
+    <Badge
+      variant="outline"
+      className="whitespace-nowrap"
+      style={{ background: style.background, color: style.color, borderColor: style.border }}
+    >
       {status}
     </Badge>
   );
 }
 
-function StatusCard({ title, value, color, icon }: any) {
+function StatusCard({ title, value, accent, accentBg, icon }: { title: string; value: number; accent: string; accentBg: string; icon: React.ReactNode }) {
   return (
-    <div className={`p-4 rounded-lg border ${color} border-opacity-50 flex flex-col justify-between`}>
-      <div className="flex justify-between items-start mb-2">
-        <span className="text-sm font-medium text-slate-600">{title}</span>
-        {icon}
-      </div>
-      <span className="text-2xl font-bold text-slate-900">{value}</span>
-    </div>
+    <Card
+      style={{
+        background: `linear-gradient(135deg, ${accentBg}, ${OB.card})`,
+        border: `1px solid ${OB.border}`,
+        borderRadius: '16px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+      }}
+      className="hover:shadow-lg hover:-translate-y-0.5 transition-all"
+    >
+      <CardContent className="p-5">
+        <div className="flex justify-between items-start mb-3">
+          <span className="text-sm font-medium" style={{ color: OB.mutedForeground }}>{title}</span>
+          <div className="p-2 rounded-lg" style={{ background: accentBg, color: accent }}>
+            {icon}
+          </div>
+        </div>
+        <span className="text-2xl font-bold" style={{ color: OB.foreground }}>{value}</span>
+      </CardContent>
+    </Card>
   )
 }
