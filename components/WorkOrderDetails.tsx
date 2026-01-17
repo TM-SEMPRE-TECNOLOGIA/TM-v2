@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
+import { 
   ArrowLeft,
-  Calendar,
-  DollarSign,
-  User,
-  FileText,
-  Building2,
-  AlertTriangle,
-  Save,
-  CheckCircle2,
+  Calendar, 
+  DollarSign, 
+  User, 
+  FileText, 
+  Building2, 
+  AlertTriangle, 
+  Save, 
+  CheckCircle2, 
   Clock,
   Plus,
   Upload,
@@ -61,7 +61,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
   const { toast } = useToast();
 
   const ordemOriginal = ordensServico.find(os => os.id === orderId);
-
+  
   const [formData, setFormData] = useState<Partial<OrdemServico>>({});
   const [newDifficulty, setNewDifficulty] = useState('');
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
@@ -114,7 +114,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
 
   const handleAddDifficulty = () => {
     if (!newDifficulty.trim()) return;
-
+    
     const entry: Dificuldade = {
       id: Date.now().toString(),
       texto: newDifficulty,
@@ -174,7 +174,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
     }));
 
     setDocuments(prev => [...prev, ...newDocs]);
-
+    
     const anexosAtuais = ordemOriginal.anexos || [];
     updateField('anexos', [...anexosAtuais, ...newDocs.map(d => d.name)]);
   };
@@ -193,15 +193,15 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
 
   const getStatusColor = (status: OSStatus) => {
     const colors: Record<OSStatus, string> = {
-      'Fornecedor Acionado': 'bg-blue-500/15 text-blue-700 border-blue-200',
-      'Em Levantamento': 'bg-purple-500/15 text-purple-700 border-purple-200',
-      'Em Elaboração': 'bg-amber-500/15 text-amber-700 border-amber-200',
-      'Em Orçamento': 'bg-cyan-500/15 text-cyan-700 border-cyan-200',
-      'Concluída': 'bg-primary/15 text-primary border-primary/20',
-      'Com Dificuldade': 'bg-destructive/15 text-destructive border-destructive/20',
-      'Mudança de Contrato': 'bg-muted text-muted-foreground border-border'
+      'Fornecedor Acionado': 'bg-blue-100 text-blue-700 border-blue-200',
+      'Em Levantamento': 'bg-amber-100 text-amber-700 border-amber-200',
+      'Em Elaboração': 'bg-orange-100 text-orange-700 border-orange-200',
+      'Em Orçamento': 'bg-purple-100 text-purple-700 border-purple-200',
+      'Concluída': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      'Com Dificuldade': 'bg-red-100 text-red-700 border-red-200',
+      'Mudança de Contrato': 'bg-pink-100 text-pink-700 border-pink-200'
     };
-    return colors[status] || 'bg-muted text-muted-foreground';
+    return colors[status] || 'bg-slate-100 text-slate-700';
   };
 
   const canEditStatus = userRole === 'manager' || userRole === 'elaborador';
@@ -213,40 +213,40 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
   const elaboradores = USERS.filter(u => u.role === 'elaborador');
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col animate-in slide-in-from-right duration-300">
-      <div className="bg-card border-b border-border p-4 px-6 shadow-sm flex items-center justify-between sticky top-0 z-10">
+    <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="bg-white border-b border-slate-200 p-4 px-6 shadow-sm flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" onClick={onClose} className="text-slate-500 hover:text-slate-900">
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-foreground">O.S {ordemOriginal.os}</h1>
+              <h1 className="text-xl font-bold text-slate-900">O.S {ordemOriginal.os}</h1>
               <Badge className={`${getStatusColor(formData.situacao || ordemOriginal.situacao)} border px-2 py-0.5 text-xs`}>
                 {formData.situacao || ordemOriginal.situacao}
               </Badge>
               {hasChanges && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                   Alterações pendentes
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+            <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
               <span className="flex items-center gap-1">
                 <Building2 size={12} /> {ordemOriginal.prefixo} - {ordemOriginal.agencia}
               </span>
-              <span className="h-3 w-[1px] bg-border"></span>
-              <span className="flex items-center gap-1 font-medium text-foreground">
+              <span className="h-3 w-[1px] bg-slate-300"></span>
+              <span className="flex items-center gap-1 font-medium text-slate-700">
                 <FileText size={12} /> {ordemOriginal.contrato}
               </span>
             </div>
           </div>
         </div>
-
+        
         <div className="flex gap-2">
-          <Button
-            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-sm"
+          <Button 
+            className="bg-emerald-600 hover:bg-emerald-700 gap-2"
             onClick={handleSave}
             disabled={!hasChanges}
           >
@@ -257,31 +257,31 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
 
       <div className="flex-1 overflow-auto p-8">
         <div className="max-w-6xl mx-auto space-y-6">
-
+        
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-slate-500 uppercase flex items-center gap-2">
                   <Clock size={16} /> Prazos e Agendamento
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Vencimento</Label>
-                  <div className="font-medium text-foreground flex items-center gap-2 mt-1">
-                    <Calendar size={16} className="text-destructive" />
+                  <Label className="text-xs text-slate-500">Vencimento</Label>
+                  <div className="font-medium text-slate-900 flex items-center gap-2 mt-1">
+                    <Calendar size={16} className="text-red-500" />
                     {ordemOriginal.vencimento || 'Não definido'}
                   </div>
                 </div>
-
+                
                 <Separator />
-
+                
                 <div className="space-y-2">
                   <Label>Previsão de Agendamento</Label>
                   {userRole === 'manager' ? (
-                    <Input
-                      type="date"
-                      value={formData.agendamento || ''}
+                    <Input 
+                      type="date" 
+                      value={formData.agendamento || ''} 
                       onChange={(e) => updateField('agendamento', e.target.value)}
                     />
                   ) : (
@@ -294,13 +294,13 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                 <div className="space-y-2">
                   <Label>Data do Levantamento</Label>
                   {userRole === 'manager' || userRole === 'elaborador' ? (
-                    <Input
-                      type="date"
-                      value={formData.dataLevantamento || ''}
+                    <Input 
+                      type="date" 
+                      value={formData.dataLevantamento || ''} 
                       onChange={(e) => updateField('dataLevantamento', e.target.value)}
                     />
                   ) : (
-                    <div className="p-2 bg-muted rounded text-sm text-foreground">
+                    <div className="p-2 bg-slate-100 rounded text-sm text-slate-700">
                       {formData.dataLevantamento || 'Não registrado'}
                     </div>
                   )}
@@ -310,7 +310,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-slate-500 uppercase flex items-center gap-2">
                   <CheckCircle2 size={16} /> Status
                 </CardTitle>
               </CardHeader>
@@ -318,8 +318,8 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                 <div className="space-y-2">
                   <Label>Situação Atual</Label>
                   {canEditStatus ? (
-                    <Select
-                      value={formData.situacao || ordemOriginal.situacao}
+                    <Select 
+                      value={formData.situacao || ordemOriginal.situacao} 
                       onValueChange={(v) => updateField('situacao', v as OSStatus)}
                     >
                       <SelectTrigger>
@@ -342,7 +342,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-slate-500 uppercase flex items-center gap-2">
                   <DollarSign size={16} /> Financeiro
                 </CardTitle>
               </CardHeader>
@@ -350,33 +350,33 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                 <div className="space-y-2">
                   <Label>Valor Orçado (R$)</Label>
                   {canEditValorOrcado ? (
-                    <Input
+                    <Input 
                       type="number"
                       step="0.01"
-                      placeholder="0,00"
+                      placeholder="0,00" 
                       value={formData.valorOrcado || ''}
                       onChange={(e) => updateField('valorOrcado', e.target.value ? parseFloat(e.target.value) : null)}
                     />
                   ) : (
-                    <div className="p-2 bg-muted rounded text-sm text-foreground">
+                    <div className="p-2 bg-slate-100 rounded text-sm">
                       {formData.valorOrcado ? `R$ ${formData.valorOrcado.toLocaleString('pt-BR')}` : '-'}
                     </div>
                   )}
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label>Valor Aprovado (R$)</Label>
                   {canEditValorAprovado ? (
-                    <Input
+                    <Input 
                       type="number"
                       step="0.01"
                       placeholder="0,00"
-                      value={formData.valorAprovado || ''}
+                      value={formData.valorAprovado || ''} 
                       onChange={(e) => updateField('valorAprovado', e.target.value ? parseFloat(e.target.value) : null)}
                       className="border-emerald-300 focus:border-emerald-500"
                     />
                   ) : (
-                    <div className="p-2 bg-muted rounded text-sm text-foreground">
+                    <div className="p-2 bg-slate-100 rounded text-sm">
                       {formData.valorAprovado ? `R$ ${formData.valorAprovado.toLocaleString('pt-BR')}` : 'Aguardando aprovação'}
                     </div>
                   )}
@@ -396,8 +396,8 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                 <div className="space-y-2">
                   <Label>Técnico de Campo</Label>
                   {canEditTecnico ? (
-                    <Select
-                      value={formData.tecnicoId || '__none__'}
+                    <Select 
+                      value={formData.tecnicoId || '__none__'} 
                       onValueChange={(v) => {
                         if (v === '__none__') {
                           updateField('tecnicoId', null);
@@ -429,8 +429,8 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                 <div className="space-y-2">
                   <Label>Elaborador do Relatório</Label>
                   {canEditElaborador ? (
-                    <Select
-                      value={formData.elaboradorId || '__none__'}
+                    <Select 
+                      value={formData.elaboradorId || '__none__'} 
                       onValueChange={(v) => {
                         if (v === '__none__') {
                           updateField('elaboradorId', null);
@@ -453,7 +453,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="p-2 border border-border rounded bg-muted text-sm font-medium text-foreground">
+                    <div className="p-2 border rounded bg-slate-100 text-sm font-medium">
                       {formData.elaborador || 'Não atribuído'}
                     </div>
                   )}
@@ -472,8 +472,8 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Registrar nova dificuldade..."
+                  <Input 
+                    placeholder="Registrar nova dificuldade..." 
                     value={newDifficulty}
                     onChange={(e) => setNewDifficulty(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddDifficulty()}
@@ -494,15 +494,15 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                       <div key={diff.id} className="flex gap-3 text-sm">
                         <Avatar className="h-8 w-8 mt-1">
                           <AvatarFallback className="bg-blue-100 text-blue-700">
-                            {diff.autor.substring(0, 2).toUpperCase()}
+                            {diff.autor.substring(0,2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 bg-muted p-3 rounded-md border border-border">
+                        <div className="flex-1 bg-slate-50 p-3 rounded-md border border-slate-100">
                           <div className="flex justify-between items-start mb-1">
-                            <span className="font-semibold text-foreground">{diff.autor}</span>
-                            <span className="text-[10px] text-muted-foreground">{diff.dataHora}</span>
+                            <span className="font-semibold text-slate-900">{diff.autor}</span>
+                            <span className="text-[10px] text-slate-400">{diff.dataHora}</span>
                           </div>
-                          <p className="text-foreground">{diff.texto}</p>
+                          <p className="text-slate-700">{diff.texto}</p>
                         </div>
                       </div>
                     ))}
@@ -519,7 +519,7 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div
+              <div 
                 className={`
                   border-2 border-dashed rounded-lg p-8 text-center transition-colors
                   ${isDragging ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}
@@ -540,11 +540,11 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                       PDF, Excel, Word, Imagens (Máx. 10MB)
                     </p>
                   </div>
-                  <Input
+                  <Input 
                     ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="hidden"
+                    type="file" 
+                    multiple 
+                    className="hidden" 
                     onChange={handleFileSelect}
                   />
                 </div>
@@ -586,9 +586,9 @@ export function WorkOrderDetails({ orderId, onClose, userRole = 'manager', curre
                             </p>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
                           className="text-slate-400 hover:text-red-500 hover:bg-red-50"
                           onClick={() => handleRemoveDocument(doc.id)}
                         >

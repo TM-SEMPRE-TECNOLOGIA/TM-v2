@@ -20,35 +20,33 @@ import { format, parseISO, isAfter, isBefore, addDays, startOfMonth, endOfMonth,
 import { ptBR } from 'date-fns/locale';
 
 // Ocean Breeze Design System Colors
-// Chart Colors for Recharts (needs exact hex)
-// Chart Colors for Recharts (needs exact hex)
-const CHART_THEME = {
-  primary: '#22c55e',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#6b7280',
-  grid: '#e5e7eb',
-  card: '#ffffff',
-  border: '#e5e7eb',
+const OB = {
+  background: '#f0f8ff',
   foreground: '#374151',
-  // Matches CSS variables
+  card: '#ffffff',
+  cardForeground: '#374151',
+  primary: '#22c55e',
+  primaryForeground: '#ffffff',
+  muted: '#f3f4f6',
+  mutedForeground: '#6b7280',
+  accent: '#d1fae5',
+  border: '#e5e7eb',
   chart1: '#22c55e',
   chart2: '#10b981',
   chart3: '#059669',
   chart4: '#047857',
   chart5: '#065f46',
+  destructive: '#ef4444',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  'Fornecedor Acionado': CHART_THEME.info,
+  'Fornecedor Acionado': '#3b82f6',
   'Em Levantamento': '#8b5cf6',
-  'Em Elaboração': CHART_THEME.warning,
+  'Em Elaboração': '#f59e0b',
   'Em Orçamento': '#06b6d4',
-  'Concluída': CHART_THEME.success,
-  'Com Dificuldade': CHART_THEME.danger,
-  'Mudança de Contrato': CHART_THEME.muted,
+  'Concluída': OB.chart1,
+  'Com Dificuldade': OB.destructive,
+  'Mudança de Contrato': '#6b7280',
 };
 
 interface DashboardProps {
@@ -167,19 +165,19 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
 
   const formatVencimento = (vencimento: string) => {
     const data = parseDate(vencimento);
-    if (!data) return { texto: 'Sem data', cor: CHART_THEME.muted };
+    if (!data) return { texto: 'Sem data', cor: OB.mutedForeground };
 
     const hoje = new Date();
     const diffDias = Math.ceil((data.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDias < 0) {
-      return { texto: `Atrasada ${Math.abs(diffDias)} dia(s)`, cor: CHART_THEME.danger };
+      return { texto: `Atrasada ${Math.abs(diffDias)} dia(s)`, cor: OB.destructive };
     } else if (diffDias === 0) {
-      return { texto: 'Vence hoje', cor: CHART_THEME.danger };
+      return { texto: 'Vence hoje', cor: OB.destructive };
     } else if (diffDias === 1) {
-      return { texto: 'Vence amanhã', cor: CHART_THEME.warning };
+      return { texto: 'Vence amanhã', cor: '#f59e0b' };
     } else {
-      return { texto: `Vence em ${diffDias} dias`, cor: CHART_THEME.warning };
+      return { texto: `Vence em ${diffDias} dias`, cor: '#f59e0b' };
     }
   };
 
@@ -201,14 +199,20 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
           </div>
         </div>
 
-        <Card className="bg-card border-2 border-dashed border-border rounded-xl">
+        <Card style={{
+          background: OB.card,
+          border: `2px dashed ${OB.border}`,
+          borderRadius: '16px'
+        }}>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <div className="p-5 rounded-full bg-accent/50">
-              <Database className="h-12 w-12 text-primary" />
+            <div className="p-5 rounded-full" style={{
+              background: `linear-gradient(135deg, ${OB.accent}, rgba(34, 197, 94, 0.1))`
+            }}>
+              <Database className="h-12 w-12" style={{ color: OB.primary }} />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-foreground">Nenhuma O.S importada</h3>
-              <p className="max-w-md text-muted-foreground">
+              <h3 className="text-xl font-semibold" style={{ color: OB.foreground }}>Nenhuma O.S importada</h3>
+              <p style={{ color: OB.mutedForeground }} className="max-w-md">
                 O Dashboard exibe dados exclusivamente das ordens de serviço que você importar.
                 Importe uma planilha para começar a visualizar métricas e gráficos.
               </p>
@@ -216,7 +220,14 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
             {onNavigateToImport && (
               <Button
                 onClick={onNavigateToImport}
-                className="mt-4 bg-gradient-to-br from-primary to-emerald-600 text-primary-foreground rounded-lg px-6 py-3 font-semibold hover:shadow-lg transition-all"
+                className="mt-4"
+                style={{
+                  background: `linear-gradient(135deg, ${OB.primary}, ${OB.chart2})`,
+                  color: OB.primaryForeground,
+                  borderRadius: '10px',
+                  padding: '12px 24px',
+                  fontWeight: 600
+                }}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Importar Planilha
@@ -230,25 +241,25 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
             title="Total de O.S"
             value="0"
             description="Nenhuma importada"
-            icon={<FileText className="text-muted-foreground" />}
+            icon={<FileText style={{ color: OB.mutedForeground }} />}
           />
           <StatsCard
             title="Taxa de Conclusão"
             value="0%"
             description="0 em andamento"
-            icon={<CheckCircle className="text-muted-foreground" />}
+            icon={<CheckCircle style={{ color: OB.mutedForeground }} />}
           />
           <StatsCard
             title="Ordens Abertas"
             value="0"
             description="0 vencendo em 7 dias"
-            icon={<Wrench className="text-muted-foreground" />}
+            icon={<Wrench style={{ color: OB.mutedForeground }} />}
           />
           <StatsCard
             title="Atrasadas"
             value="0"
             description="Nenhuma atrasada"
-            icon={<AlertTriangle className="text-muted-foreground" />}
+            icon={<AlertTriangle style={{ color: OB.mutedForeground }} />}
           />
         </div>
       </div>
@@ -260,8 +271,8 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>Dashboard</h2>
+          <p style={{ color: OB.mutedForeground }}>
             {stats.total} O.S importadas • {contratos.length} contrato(s)
           </p>
         </div>
@@ -273,40 +284,45 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
           title="Total de O.S"
           value={stats.total.toString()}
           description={`${stats.concluidas} concluídas`}
-          icon={<FileText className="text-blue-500" />}
+          icon={<FileText style={{ color: '#3b82f6' }} />}
           accentColor="#3b82f6"
         />
         <StatsCard
           title="Taxa de Conclusão"
           value={`${stats.taxaConclusao}%`}
           description={`${stats.abertas} em andamento`}
-          icon={<CheckCircle className="text-primary" />}
-          accentColor={CHART_THEME.chart1}
+          icon={<CheckCircle style={{ color: OB.chart1 }} />}
+          accentColor={OB.chart1}
         />
         <StatsCard
           title="Ordens Abertas"
           value={stats.abertas.toString()}
           description={`${stats.urgentes} vencendo em 7 dias`}
-          icon={<Wrench className="text-amber-500" />}
+          icon={<Wrench style={{ color: '#f59e0b' }} />}
           accentColor="#f59e0b"
         />
         <StatsCard
           title="Atrasadas"
           value={stats.atrasadas.toString()}
           description={stats.atrasadas > 0 ? "Requer atenção imediata" : "Nenhuma atrasada"}
-          icon={<AlertTriangle className="text-destructive" />}
+          icon={<AlertTriangle style={{ color: OB.destructive }} />}
           highlight={stats.atrasadas > 0}
-          accentColor={CHART_THEME.danger}
+          accentColor={OB.destructive}
         />
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bar Chart */}
-        <Card className="bg-card border border-border rounded-xl shadow-sm">
+        <Card style={{
+          background: OB.card,
+          border: `1px solid ${OB.border}`,
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+        }}>
           <CardHeader>
-            <CardTitle className="text-foreground">O.S por Mês</CardTitle>
-            <CardDescription className="text-muted-foreground">Concluídas vs Pendentes (Últimos 6 meses)</CardDescription>
+            <CardTitle style={{ color: OB.foreground }}>O.S por Mês</CardTitle>
+            <CardDescription style={{ color: OB.mutedForeground }}>Concluídas vs Pendentes (Últimos 6 meses)</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {barData.length > 0 ? (
@@ -315,23 +331,23 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
                   data={barData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_THEME.grid} />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: CHART_THEME.muted }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: CHART_THEME.muted }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={OB.border} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: OB.mutedForeground }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: OB.mutedForeground }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: CHART_THEME.card,
+                      backgroundColor: OB.card,
                       borderRadius: '12px',
-                      border: `1px solid ${CHART_THEME.border}`,
+                      border: `1px solid ${OB.border}`,
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }}
                   />
-                  <Bar dataKey="Concluídas" fill={CHART_THEME.chart1} radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="Pendentes" fill={CHART_THEME.warning} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Concluídas" fill={OB.chart1} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Pendentes" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
+              <div className="h-full flex items-center justify-center" style={{ color: OB.mutedForeground }}>
                 <div className="text-center">
                   <TrendingUp size={48} className="mx-auto mb-2 opacity-50" />
                   <p>Dados insuficientes para o gráfico</p>
@@ -342,10 +358,15 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
         </Card>
 
         {/* Pie Chart */}
-        <Card className="bg-card border border-border rounded-xl shadow-sm">
+        <Card style={{
+          background: OB.card,
+          border: `1px solid ${OB.border}`,
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+        }}>
           <CardHeader>
-            <CardTitle className="text-foreground">Status das O.S</CardTitle>
-            <CardDescription className="text-muted-foreground">Distribuição atual por situação</CardDescription>
+            <CardTitle style={{ color: OB.foreground }}>Status das O.S</CardTitle>
+            <CardDescription style={{ color: OB.mutedForeground }}>Distribuição atual por situação</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] flex items-center justify-center relative">
             {pieData.length > 0 ? (
@@ -368,26 +389,26 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
                     <Tooltip
                       formatter={(value: number) => [`${value} O.S`, '']}
                       contentStyle={{
-                        backgroundColor: CHART_THEME.card,
+                        backgroundColor: OB.card,
                         borderRadius: '12px',
-                        border: `1px solid ${CHART_THEME.border}`
+                        border: `1px solid ${OB.border}`
                       }}
                     />
                     <Legend
                       layout="vertical"
                       align="right"
                       verticalAlign="middle"
-                      formatter={(value) => <span style={{ color: CHART_THEME.muted, fontSize: '12px' }}>{value}</span>}
+                      formatter={(value) => <span style={{ color: OB.mutedForeground, fontSize: '12px' }}>{value}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-bold text-foreground">{totalPie}</span>
-                  <span className="text-xs uppercase font-semibold text-muted-foreground">Total</span>
+                  <span className="text-3xl font-bold" style={{ color: OB.foreground }}>{totalPie}</span>
+                  <span className="text-xs uppercase font-semibold" style={{ color: OB.mutedForeground }}>Total</span>
                 </div>
               </>
             ) : (
-              <div className="text-center text-muted-foreground">
+              <div className="text-center" style={{ color: OB.mutedForeground }}>
                 <Clock size={48} className="mx-auto mb-2 opacity-50" />
                 <p>Sem dados para exibir</p>
               </div>
@@ -397,10 +418,15 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
       </div>
 
       {/* Urgent Tasks */}
-      <Card className="bg-card border border-border rounded-xl shadow-sm">
+      <Card style={{
+        background: OB.card,
+        border: `1px solid ${OB.border}`,
+        borderRadius: '16px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+      }}>
         <CardHeader>
-          <CardTitle className="text-foreground">Tarefas Urgentes</CardTitle>
-          <CardDescription className="text-muted-foreground">O.S vencendo nos próximos 7 dias ou atrasadas</CardDescription>
+          <CardTitle style={{ color: OB.foreground }}>Tarefas Urgentes</CardTitle>
+          <CardDescription style={{ color: OB.mutedForeground }}>O.S vencendo nos próximos 7 dias ou atrasadas</CardDescription>
         </CardHeader>
         <CardContent>
           {tarefasUrgentes.length > 0 ? (
@@ -412,31 +438,43 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
                 return (
                   <div
                     key={os.id}
-                    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-200 border ${isAtrasada
-                      ? 'bg-destructive/5 border-destructive/20'
-                      : 'bg-amber-500/5 border-amber-500/20'
-                      }`}
+                    className="flex items-center justify-between p-4 rounded-xl transition-all duration-200"
+                    style={{
+                      background: isAtrasada
+                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04))'
+                        : 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.04))',
+                      border: `1px solid ${isAtrasada ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`
+                    }}
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`p-2.5 rounded-lg ${isAtrasada ? 'bg-destructive/15 text-destructive' : 'bg-amber-500/15 text-amber-500'
-                          }`}
+                        className="p-2.5 rounded-lg"
+                        style={{
+                          background: isAtrasada ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                          color: isAtrasada ? OB.destructive : '#f59e0b'
+                        }}
                       >
                         <Clock size={20} />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-foreground">O.S {os.os} - {os.prefixo || 'Sem prefixo'}</h4>
-                        <p className="text-sm text-muted-foreground">{os.agencia || 'Sem agência'} • {os.contrato || 'Sem contrato'}</p>
-                        <p className={`text-xs font-medium mt-1 ${isAtrasada ? 'text-destructive' : 'text-amber-500'}`}>{vencInfo.texto}</p>
+                        <h4 className="font-semibold" style={{ color: OB.foreground }}>O.S {os.os} - {os.prefixo || 'Sem prefixo'}</h4>
+                        <p className="text-sm" style={{ color: OB.mutedForeground }}>{os.agencia || 'Sem agência'} • {os.contrato || 'Sem contrato'}</p>
+                        <p className="text-xs font-medium mt-1" style={{ color: vencInfo.cor }}>{vencInfo.texto}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <span
-                        className={`inline-block px-3 py-1.5 text-xs font-semibold rounded-full ${os.situacao === 'Com Dificuldade' ? 'bg-destructive/15 text-destructive' :
-                          os.situacao === 'Em Orçamento' ? 'bg-cyan-500/15 text-cyan-500' :
-                            os.situacao === 'Em Elaboração' ? 'bg-amber-500/15 text-amber-500' :
-                              'bg-blue-500/15 text-blue-500'
-                          }`}
+                        className="inline-block px-3 py-1.5 text-xs font-semibold rounded-full"
+                        style={{
+                          background: os.situacao === 'Com Dificuldade' ? 'rgba(239, 68, 68, 0.15)' :
+                            os.situacao === 'Em Orçamento' ? 'rgba(6, 182, 212, 0.15)' :
+                              os.situacao === 'Em Elaboração' ? 'rgba(245, 158, 11, 0.15)' :
+                                'rgba(59, 130, 246, 0.15)',
+                          color: os.situacao === 'Com Dificuldade' ? OB.destructive :
+                            os.situacao === 'Em Orçamento' ? '#06b6d4' :
+                              os.situacao === 'Em Elaboração' ? '#f59e0b' :
+                                '#3b82f6'
+                        }}
                       >
                         {os.situacao}
                       </span>
@@ -446,11 +484,11 @@ export function Dashboard({ onNavigateToImport }: DashboardProps) {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <div className="p-4 rounded-full mx-auto w-fit mb-3 bg-accent">
-                <CheckCircle size={32} className="text-primary" />
+            <div className="text-center py-8" style={{ color: OB.mutedForeground }}>
+              <div className="p-4 rounded-full mx-auto w-fit mb-3" style={{ background: OB.accent }}>
+                <CheckCircle size={32} style={{ color: OB.chart1 }} />
               </div>
-              <p className="font-medium text-foreground">Nenhuma tarefa urgente</p>
+              <p className="font-medium" style={{ color: OB.foreground }}>Nenhuma tarefa urgente</p>
               <p className="text-sm">Todas as O.S estão dentro do prazo</p>
             </div>
           )}
@@ -469,28 +507,29 @@ function StatsCard({ title, value, description, icon, highlight = false, accentC
   accentColor?: string;
 }) {
   return (
-    <Card
-      className={`
-        bg-card border border-border rounded-xl shadow-sm transition-all duration-200 
-        hover:shadow-lg hover:-translate-y-0.5
-        ${highlight ? 'bg-destructive/5 border-destructive/20' : ''}
-      `}
+    <Card style={{
+      background: highlight
+        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04))'
+        : OB.card,
+      border: `1px solid ${highlight ? 'rgba(239, 68, 68, 0.2)' : OB.border}`,
+      borderRadius: '16px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+      transition: 'transform 0.2s, box-shadow 0.2s'
+    }}
+      className="hover:shadow-lg hover:-translate-y-0.5"
     >
       <CardContent className="p-6">
         <div className="flex items-center justify-between space-y-0 pb-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div
-            className="p-2 rounded-lg"
-            style={{
-              background: accentColor ? `${accentColor}15` : '#f3f4f6' // Fallback to muted
-            }}
-          >
+          <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>{title}</p>
+          <div className="p-2 rounded-lg" style={{
+            background: accentColor ? `${accentColor}15` : OB.muted
+          }}>
             {icon}
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <span className={`text-2xl font-bold ${highlight ? 'text-destructive' : 'text-foreground'}`}>{value}</span>
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <span className="text-2xl font-bold" style={{ color: highlight ? OB.destructive : OB.foreground }}>{value}</span>
+          <p className="text-xs" style={{ color: OB.mutedForeground }}>{description}</p>
         </div>
       </CardContent>
     </Card>
