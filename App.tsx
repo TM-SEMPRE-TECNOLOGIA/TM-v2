@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart2, 
-  Users, 
-  ClipboardList, 
-  Settings as SettingsIcon, 
+import {
+  BarChart2,
+  Users,
+  ClipboardList,
+  Settings as SettingsIcon,
   CalendarDays,
   Menu,
   AlertTriangle,
@@ -11,7 +11,9 @@ import {
   FileText,
   LogOut,
   Briefcase,
-  DollarSign
+  DollarSign,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { TeamList } from './components/TeamList';
@@ -28,6 +30,25 @@ import type { UserRole } from './lib/types';
 import { USERS } from './lib/types';
 import { Toaster } from './components/ui/toaster';
 import { useOSStore } from './lib/store';
+
+// Ocean Breeze Design System Colors
+const OB = {
+  background: '#f0f8ff',
+  foreground: '#374151',
+  card: '#ffffff',
+  primary: '#22c55e',
+  primaryForeground: '#ffffff',
+  secondary: '#e0f2fe',
+  muted: '#f3f4f6',
+  mutedForeground: '#6b7280',
+  accent: '#d1fae5',
+  border: '#e5e7eb',
+  sidebar: '#1e293b',
+  sidebarForeground: '#d1d5db',
+  sidebarPrimary: '#34d399',
+  sidebarAccent: '#374151',
+  sidebarBorder: '#4b5563',
+};
 
 function App() {
   const [userRole, setUserRole] = useState<UserRole>(null);
@@ -89,15 +110,6 @@ function App() {
     }
   };
 
-  const getRoleColor = () => {
-    switch (userRole) {
-      case 'manager': return 'emerald';
-      case 'elaborador': return 'blue';
-      case 'contract_admin': return 'purple';
-      default: return 'slate';
-    }
-  };
-
   const getRoleLabel = () => {
     switch (userRole) {
       case 'manager': return 'Gerente';
@@ -116,114 +128,154 @@ function App() {
     }
   };
 
-  const color = getRoleColor();
+  const getRoleStyles = () => {
+    switch (userRole) {
+      case 'manager':
+        return { bg: 'rgba(209, 250, 229, 0.8)', color: '#059669', border: '#a7f3d0' };
+      case 'elaborador':
+        return { bg: 'rgba(219, 234, 254, 0.8)', color: '#2563eb', border: '#93c5fd' };
+      case 'contract_admin':
+        return { bg: 'rgba(243, 232, 255, 0.8)', color: '#7c3aed', border: '#c4b5fd' };
+      default:
+        return { bg: '#f3f4f6', color: '#6b7280', border: '#d1d5db' };
+    }
+  };
+
+  const roleStyles = getRoleStyles();
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans">
-      <aside 
-        className={`${
-          isSidebarOpen ? 'w-64' : 'w-20'
-        } bg-slate-900 text-white transition-all duration-300 flex flex-col shadow-xl z-20`}
+    <div className="flex h-screen" style={{ background: OB.background, color: OB.foreground, fontFamily: 'DM Sans, sans-serif' }}>
+      {/* Sidebar - Ocean Breeze Dark */}
+      <aside
+        className="flex flex-col transition-all duration-300 shadow-xl z-20"
+        style={{
+          width: isSidebarOpen ? '260px' : '80px',
+          background: `linear-gradient(180deg, ${OB.sidebar} 0%, #0f172a 100%)`,
+          borderRight: `1px solid ${OB.sidebarBorder}`
+        }}
       >
-        <div className="p-4 flex items-center justify-between border-b border-slate-700 h-16">
+        {/* Logo Header */}
+        <div
+          className="flex items-center justify-between h-16 px-4"
+          style={{ borderBottom: `1px solid ${OB.sidebarBorder}` }}
+        >
           {isSidebarOpen ? (
-            <h1 className="font-bold text-xl tracking-tight text-emerald-400">MAFFENG</h1>
+            <h1 className="font-bold text-xl tracking-tight" style={{ color: OB.sidebarPrimary }}>
+              MAFFENG
+            </h1>
           ) : (
-            <span className="font-bold text-xl text-emerald-400">M</span>
+            <span className="font-bold text-xl" style={{ color: OB.sidebarPrimary }}>M</span>
           )}
-          <button 
+          <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-1 hover:bg-slate-800 rounded-md transition-colors"
+            className="p-2 rounded-lg transition-all duration-200"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              color: OB.sidebarForeground
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
           >
-            <Menu size={20} />
+            {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </button>
         </div>
 
-        <nav className="flex-1 py-6 px-2 space-y-1">
+        {/* Navigation */}
+        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {userRole === 'manager' && (
-            <NavItem 
-              icon={<BarChart2 size={20} />} 
-              label="Dashboard" 
-              isActive={activeTab === 'dashboard'} 
+            <NavItem
+              icon={<BarChart2 size={20} />}
+              label="Dashboard"
+              isActive={activeTab === 'dashboard'}
               isOpen={isSidebarOpen}
-              onClick={() => setActiveTab('dashboard')} 
+              onClick={() => setActiveTab('dashboard')}
             />
           )}
-          
-          <NavItem 
-            icon={<ClipboardList size={20} />} 
-            label={getWorkOrdersLabel()} 
-            isActive={activeTab === 'work-orders'} 
+
+          <NavItem
+            icon={<ClipboardList size={20} />}
+            label={getWorkOrdersLabel()}
+            isActive={activeTab === 'work-orders'}
             isOpen={isSidebarOpen}
-            onClick={() => setActiveTab('work-orders')} 
+            onClick={() => setActiveTab('work-orders')}
           />
 
           {(userRole === 'manager' || userRole === 'elaborador') && (
-            <NavItem 
-              icon={<CalendarDays size={20} />} 
-              label="Agenda" 
-              isActive={activeTab === 'agenda'} 
+            <NavItem
+              icon={<CalendarDays size={20} />}
+              label="Agenda"
+              isActive={activeTab === 'agenda'}
               isOpen={isSidebarOpen}
-              onClick={() => setActiveTab('agenda')} 
+              onClick={() => setActiveTab('agenda')}
             />
           )}
 
           {(userRole === 'manager' || userRole === 'contract_admin') && (
-            <NavItem 
-              icon={<DollarSign size={20} />} 
-              label="Balanço" 
-              isActive={activeTab === 'balanco'} 
+            <NavItem
+              icon={<DollarSign size={20} />}
+              label="Balanço"
+              isActive={activeTab === 'balanco'}
               isOpen={isSidebarOpen}
-              onClick={() => setActiveTab('balanco')} 
+              onClick={() => setActiveTab('balanco')}
             />
           )}
 
           {userRole === 'manager' && (
             <>
-              <div className="my-2 border-t border-slate-800 mx-2"></div>
-              <NavItem 
-                icon={<Users size={20} />} 
-                label="Equipe" 
-                isActive={activeTab === 'team'} 
+              <div className="my-3 mx-2" style={{ borderTop: `1px solid ${OB.sidebarBorder}` }}></div>
+              <NavItem
+                icon={<Users size={20} />}
+                label="Equipe"
+                isActive={activeTab === 'team'}
                 isOpen={isSidebarOpen}
-                onClick={() => setActiveTab('team')} 
+                onClick={() => setActiveTab('team')}
               />
-              <NavItem 
-                icon={<FileSpreadsheet size={20} />} 
-                label="Importar O.S" 
-                isActive={activeTab === 'import'} 
+              <NavItem
+                icon={<FileSpreadsheet size={20} />}
+                label="Importar O.S"
+                isActive={activeTab === 'import'}
                 isOpen={isSidebarOpen}
-                onClick={() => setActiveTab('import')} 
+                onClick={() => setActiveTab('import')}
               />
-               <NavItem 
-                icon={<AlertTriangle size={20} />} 
-                label="Dificuldades" 
-                isActive={activeTab === 'difficulties'} 
+              <NavItem
+                icon={<AlertTriangle size={20} />}
+                label="Dificuldades"
+                isActive={activeTab === 'difficulties'}
                 isOpen={isSidebarOpen}
-                onClick={() => setActiveTab('difficulties')} 
+                onClick={() => setActiveTab('difficulties')}
               />
-               <NavItem 
-                icon={<FileText size={20} />} 
-                label="Relatórios" 
-                isActive={activeTab === 'reports'} 
+              <NavItem
+                icon={<FileText size={20} />}
+                label="Relatórios"
+                isActive={activeTab === 'reports'}
                 isOpen={isSidebarOpen}
-                onClick={() => setActiveTab('reports')} 
+                onClick={() => setActiveTab('reports')}
               />
             </>
           )}
         </nav>
 
-        <div className="p-4 border-t border-slate-700 space-y-2">
-          <NavItem 
-            icon={<SettingsIcon size={20} />} 
-            label="Configurações" 
-            isActive={activeTab === 'settings'} 
+        {/* Footer */}
+        <div className="p-4 space-y-2" style={{ borderTop: `1px solid ${OB.sidebarBorder}` }}>
+          <NavItem
+            icon={<SettingsIcon size={20} />}
+            label="Configurações"
+            isActive={activeTab === 'settings'}
             isOpen={isSidebarOpen}
-            onClick={() => setActiveTab('settings')} 
+            onClick={() => setActiveTab('settings')}
           />
-           <button
+          <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group text-slate-400 hover:bg-red-900/30 hover:text-red-400`}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group"
+            style={{ color: '#94a3b8' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+              e.currentTarget.style.color = '#f87171';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#94a3b8';
+            }}
           >
             <LogOut size={20} />
             {isSidebarOpen && (
@@ -235,9 +287,18 @@ function App() {
         </div>
       </aside>
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-10">
-          <h2 className="text-xl font-semibold text-slate-800">
+        {/* Header - Ocean Breeze Light */}
+        <header
+          className="h-16 flex items-center justify-between px-6 z-10"
+          style={{
+            background: OB.card,
+            borderBottom: `1px solid ${OB.border}`,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+          }}
+        >
+          <h2 className="text-xl font-semibold" style={{ color: OB.foreground }}>
             {activeTab === 'dashboard' && 'Dashboard Geral'}
             {activeTab === 'team' && 'Gestão de Equipe'}
             {activeTab === 'agenda' && 'Agenda'}
@@ -250,21 +311,25 @@ function App() {
           </h2>
           <div className="flex items-center gap-4">
             <Notifications />
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold border cursor-pointer transition-colors
-              ${userRole === 'manager' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : ''}
-              ${userRole === 'elaborador' ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200' : ''}
-              ${userRole === 'contract_admin' ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' : ''}
-            `}>
+            <div
+              className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm cursor-pointer transition-all duration-200"
+              style={{
+                background: roleStyles.bg,
+                color: roleStyles.color,
+                border: `2px solid ${roleStyles.border}`
+              }}
+            >
               {currentUser?.initials || 'U'}
             </div>
             <div className="hidden md:block text-sm">
-                <p className="font-medium text-slate-900 leading-none">{currentUser?.name}</p>
-                <p className="text-xs text-slate-500 mt-1">{getRoleLabel()}</p>
+              <p className="font-semibold leading-none" style={{ color: OB.foreground }}>{currentUser?.name}</p>
+              <p className="text-xs mt-1" style={{ color: OB.mutedForeground }}>{getRoleLabel()}</p>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-6 bg-slate-50">
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto p-6" style={{ background: OB.background }}>
           <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
             {renderContent()}
           </div>
@@ -276,16 +341,32 @@ function App() {
 }
 
 function NavItem({ icon, label, isActive, isOpen, onClick }: any) {
+  const activeStyle = {
+    background: `linear-gradient(135deg, #22c55e, #16a34a)`,
+    color: '#ffffff',
+    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)'
+  };
+
+  const inactiveStyle = {
+    background: 'transparent',
+    color: '#94a3b8'
+  };
+
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group
-        ${isActive 
-          ? 'bg-emerald-600 text-white shadow-md' 
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-        }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200"
+      style={isActive ? activeStyle : {
+        ...inactiveStyle,
+        background: isHovered ? 'rgba(255,255,255,0.08)' : 'transparent',
+        color: isHovered ? '#ffffff' : '#94a3b8'
+      }}
     >
-      <div className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+      <div style={{ color: isActive ? '#ffffff' : (isHovered ? '#ffffff' : '#94a3b8') }}>
         {icon}
       </div>
       {isOpen && (
