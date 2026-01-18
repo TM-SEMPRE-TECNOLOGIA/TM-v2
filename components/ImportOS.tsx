@@ -496,67 +496,91 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
     }
   };
 
+  const OB = {
+    background: '#f0f8ff',
+    foreground: '#374151',
+    card: '#ffffff',
+    primary: '#22c55e',
+    muted: '#f3f4f6',
+    mutedForeground: '#6b7280',
+    accent: '#d1fae5',
+    border: '#e5e7eb',
+  };
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Importação de O.S</h2>
-        <p className="text-slate-500">Importe planilhas Excel com detecção inteligente de colunas e normalização automática.</p>
-      </div>
+    <div className="min-h-screen p-6" style={{ background: OB.background }}>
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>
+            Importação de O.S
+          </h1>
+          <p style={{ color: OB.mutedForeground }}>
+            Importe planilhas Excel com detecção inteligente de colunas e normalização automática.
+          </p>
+        </div>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileSelect}
-        accept=".xlsx,.xls,.csv"
-        className="hidden"
-      />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+        />
 
-      {step === 'upload' && (
-        <Card 
-          className={`border-2 border-dashed transition-all duration-200 ${
-            isDragging 
-              ? 'border-emerald-500 bg-emerald-50' 
-              : 'border-slate-300 bg-slate-50/50 hover:border-slate-400'
-          }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <div className={`p-4 rounded-full shadow-sm transition-all duration-200 ${
-              isDragging ? 'bg-emerald-100 scale-110' : 'bg-white'
-            }`}>
-              {isLoading ? (
-                <Loader2 
-                  className="h-10 w-10 text-emerald-600" 
-                  style={{ animation: 'spin 1s linear infinite' }}
-                />
-              ) : (
-                <Upload className={`h-10 w-10 ${isDragging ? 'text-emerald-700' : 'text-emerald-600'}`} />
-              )}
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-semibold text-lg">
-                {isDragging ? 'Solte o arquivo aqui!' : 'Arraste sua planilha ou clique para selecionar'}
-              </h3>
-              <p className="text-sm text-slate-500">
-                O sistema detectará automaticamente as colunas da sua planilha
-              </p>
-            </div>
-            <Button 
-              onClick={() => fileInputRef.current?.click()} 
-              className="bg-emerald-600 hover:bg-emerald-700 mt-4"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Carregando...' : 'Selecionar Arquivo'}
-            </Button>
-            <div className="pt-8 text-xs text-slate-400 flex flex-col items-center gap-1">
-               <span className="flex items-center gap-1"><FileSpreadsheet size={14} /> Formatos aceitos:</span>
-               <span>.xlsx, .xls, .csv</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {step === 'upload' && (
+          <Card 
+            className={`border-2 border-dashed transition-all duration-200 shadow-md ${
+              isDragging 
+                ? 'border-emerald-500' 
+                : 'hover:border-emerald-300'
+            }`}
+            style={{ 
+              background: isDragging ? OB.accent : OB.card,
+              borderColor: isDragging ? OB.primary : OB.border
+            }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+              <div 
+                className={`p-4 rounded-full shadow-sm transition-all duration-200 ${
+                  isDragging ? 'scale-110' : ''
+                }`}
+                style={{ background: isDragging ? OB.accent : OB.muted }}
+              >
+                {isLoading ? (
+                  <Loader2 
+                    className="h-10 w-10" 
+                    style={{ color: OB.primary, animation: 'spin 1s linear infinite' }}
+                  />
+                ) : (
+                  <Upload className="h-10 w-10" style={{ color: OB.primary }} />
+                )}
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-semibold text-lg" style={{ color: OB.foreground }}>
+                  {isDragging ? 'Solte o arquivo aqui!' : 'Arraste sua planilha ou clique para selecionar'}
+                </h3>
+                <p className="text-sm" style={{ color: OB.mutedForeground }}>
+                  O sistema detectará automaticamente as colunas da sua planilha
+                </p>
+              </div>
+              <Button 
+                onClick={() => fileInputRef.current?.click()} 
+                className="mt-4 text-white"
+                style={{ background: OB.primary }}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Carregando...' : 'Selecionar Arquivo'}
+              </Button>
+              <div className="pt-8 text-xs flex flex-col items-center gap-1" style={{ color: OB.mutedForeground }}>
+                 <span className="flex items-center gap-1"><FileSpreadsheet size={14} /> Formatos aceitos:</span>
+                 <span>.xlsx, .xls, .csv</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {step === 'mapping' && (
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -782,6 +806,7 @@ export function ImportOS({ onNavigateToOS }: ImportOSProps) {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

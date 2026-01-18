@@ -12,13 +12,30 @@ import {
   Users,
   FileEdit,
   BarChart3,
-  Download,
-  FileDown
+  FileDown,
+  Wallet
 } from 'lucide-react';
 import { useOSStore, getContratos } from '../lib/store';
 import { USERS, TECNICOS } from '../lib/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { useToast } from '../hooks/use-toast';
+
+const OB = {
+  background: '#f0f8ff',
+  foreground: '#374151',
+  card: '#ffffff',
+  primary: '#22c55e',
+  primaryLight: '#34d399',
+  secondary: '#e0f2fe',
+  muted: '#f3f4f6',
+  mutedForeground: '#6b7280',
+  accent: '#d1fae5',
+  border: '#e5e7eb',
+  chart1: '#22c55e',
+  chart2: '#10b981',
+  chart3: '#059669',
+  destructive: '#ef4444',
+};
 
 export function BalancoPreventivas() {
   const ordensServico = useOSStore((state) => state.ordensServico);
@@ -179,7 +196,7 @@ export function BalancoPreventivas() {
     orcado: c.valorOrcado
   }));
 
-  const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#6366f1'];
+  const COLORS = [OB.chart1, OB.chart2, OB.chart3, '#3b82f6', '#8b5cf6', '#f59e0b'];
 
   const pieData = porContrato.slice(0, 6).map((c, i) => ({
     name: c.contrato.length > 12 ? c.contrato.substring(0, 12) + '...' : c.contrato,
@@ -197,329 +214,431 @@ export function BalancoPreventivas() {
 
   if (ordensServico.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Balanço das Preventivas</h2>
-          <p className="text-slate-500">Análise financeira das ordens de serviço por contrato, técnico e elaborador.</p>
+      <div className="min-h-screen p-6" style={{ background: OB.background }}>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>
+              Balanço das Preventivas
+            </h1>
+            <p style={{ color: OB.mutedForeground }}>
+              Análise financeira das ordens de serviço por contrato, técnico e elaborador.
+            </p>
+          </div>
+          <Card className="border-2 border-dashed" style={{ borderColor: OB.border, background: OB.card }}>
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+              <div className="p-4 rounded-full" style={{ background: OB.muted }}>
+                <BarChart3 className="h-12 w-12" style={{ color: OB.mutedForeground }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: OB.foreground }}>
+                  Nenhuma O.S Importada
+                </h3>
+                <p style={{ color: OB.mutedForeground }} className="max-w-sm">
+                  Importe ordens de serviço para visualizar o balanço financeiro das preventivas.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <Card className="border-dashed border-2">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <BarChart3 className="h-16 w-16 text-slate-300" />
-            <div>
-              <h3 className="text-lg font-semibold text-slate-700">Nenhuma O.S Importada</h3>
-              <p className="text-slate-500 max-w-sm">
-                Importe ordens de serviço para visualizar o balanço financeiro das preventivas.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Balanço das Preventivas</h2>
-          <p className="text-slate-500">Análise financeira das ordens de serviço por contrato, técnico e elaborador.</p>
+    <div className="min-h-screen p-6" style={{ background: OB.background }}>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>
+              Balanço das Preventivas
+            </h1>
+            <p style={{ color: OB.mutedForeground }}>
+              Análise financeira das ordens de serviço por contrato, técnico e elaborador.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={exportBalancoContrato} 
+              className="gap-2 border-emerald-200 hover:bg-emerald-50"
+            >
+              <FileDown size={16} style={{ color: OB.primary }} /> Contratos
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={exportBalancoTecnico} 
+              className="gap-2 border-emerald-200 hover:bg-emerald-50"
+            >
+              <FileDown size={16} style={{ color: OB.primary }} /> Técnicos
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={exportBalancoElaborador} 
+              className="gap-2 border-emerald-200 hover:bg-emerald-50"
+            >
+              <FileDown size={16} style={{ color: OB.primary }} /> Elaboradores
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportBalancoContrato} className="gap-2">
-            <FileDown size={16} /> Exportar Contratos
-          </Button>
-          <Button variant="outline" onClick={exportBalancoTecnico} className="gap-2">
-            <FileDown size={16} /> Exportar Técnicos
-          </Button>
-          <Button variant="outline" onClick={exportBalancoElaborador} className="gap-2">
-            <FileDown size={16} /> Exportar Elaboradores
-          </Button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard
-          title="Total Aprovado"
-          value={formatCurrency(stats.totalAprovado)}
-          subtitle={`${stats.osAprovadas} O.S com valor aprovado`}
-          icon={<DollarSign className="h-5 w-5 text-emerald-600" />}
-          color="emerald"
-        />
-        <SummaryCard
-          title="Total Orçado"
-          value={formatCurrency(stats.totalOrcado)}
-          subtitle={`${stats.totalOS} O.S no sistema`}
-          icon={<BarChart3 className="h-5 w-5 text-blue-600" />}
-          color="blue"
-        />
-        <SummaryCard
-          title="Diferença"
-          value={formatCurrency(stats.diferenca)}
-          subtitle={stats.diferenca >= 0 ? "Acima do orçado" : "Abaixo do orçado"}
-          icon={stats.diferenca >= 0 ? 
-            <TrendingUp className="h-5 w-5 text-emerald-600" /> : 
-            <TrendingDown className="h-5 w-5 text-red-600" />
-          }
-          color={stats.diferenca >= 0 ? "emerald" : "red"}
-        />
-        <SummaryCard
-          title="Pendentes Aprovação"
-          value={String(stats.osPendentes)}
-          subtitle="O.S aguardando valor aprovado"
-          icon={<FileEdit className="h-5 w-5 text-amber-600" />}
-          color="amber"
-        />
-      </div>
-
-      {chartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Valores por Contrato</CardTitle>
-              <CardDescription>Comparativo entre orçado e aprovado</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={12} />
-                  <YAxis fontSize={12} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  <Legend />
-                  <Bar dataKey="orcado" name="Orçado" fill="#94a3b8" />
-                  <Bar dataKey="aprovado" name="Aprovado" fill="#10b981" />
-                </BarChart>
-              </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl" style={{ background: OB.accent }}>
+                  <DollarSign size={24} style={{ color: OB.chart1 }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Total Aprovado</p>
+                  <h3 className="text-xl font-bold" style={{ color: OB.primary }}>
+                    {formatCurrency(stats.totalAprovado)}
+                  </h3>
+                  <p className="text-xs" style={{ color: OB.mutedForeground }}>
+                    {stats.osAprovadas} O.S aprovadas
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Distribuição por Contrato</CardTitle>
-              <CardDescription>Valores aprovados</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine={false}
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl" style={{ background: OB.secondary }}>
+                  <Wallet size={24} className="text-sky-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Total Orçado</p>
+                  <h3 className="text-xl font-bold" style={{ color: OB.foreground }}>
+                    {formatCurrency(stats.totalOrcado)}
+                  </h3>
+                  <p className="text-xs" style={{ color: OB.mutedForeground }}>
+                    {stats.totalOS} O.S no sistema
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div 
+                  className="p-3 rounded-xl" 
+                  style={{ background: stats.diferenca >= 0 ? OB.accent : '#fef2f2' }}
+                >
+                  {stats.diferenca >= 0 ? (
+                    <TrendingUp size={24} style={{ color: OB.chart1 }} />
+                  ) : (
+                    <TrendingDown size={24} style={{ color: OB.destructive }} />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Diferença</p>
+                  <h3 
+                    className="text-xl font-bold" 
+                    style={{ color: stats.diferenca >= 0 ? OB.primary : OB.destructive }}
                   >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                </PieChart>
-              </ResponsiveContainer>
+                    {stats.diferenca >= 0 ? '+' : ''}{formatCurrency(stats.diferenca)}
+                  </h3>
+                  <p className="text-xs" style={{ color: OB.mutedForeground }}>
+                    {stats.diferenca >= 0 ? "Acima do orçado" : "Abaixo do orçado"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-amber-50">
+                  <FileEdit size={24} className="text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Pendentes</p>
+                  <h3 className="text-xl font-bold text-amber-600">{stats.osPendentes}</h3>
+                  <p className="text-xs" style={{ color: OB.mutedForeground }}>
+                    Aguardando aprovação
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-      )}
 
-      <Tabs defaultValue="contrato" className="w-full">
-        <TabsList>
-          <TabsTrigger value="contrato" className="flex items-center gap-2">
-            <Building2 size={16} /> Por Contrato
-          </TabsTrigger>
-          <TabsTrigger value="tecnico" className="flex items-center gap-2">
-            <Users size={16} /> Por Técnico
-          </TabsTrigger>
-          <TabsTrigger value="elaborador" className="flex items-center gap-2">
-            <FileEdit size={16} /> Por Elaborador
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="contrato">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Balanço por Contrato</CardTitle>
-              <CardDescription>Resumo financeiro agrupado por contrato</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Contrato</TableHead>
-                    <TableHead className="text-center">Qtd O.S</TableHead>
-                    <TableHead className="text-center">Aprovadas</TableHead>
-                    <TableHead className="text-right">Valor Orçado</TableHead>
-                    <TableHead className="text-right">Valor Aprovado</TableHead>
-                    <TableHead className="text-right">Diferença</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {porContrato.map((item) => (
-                    <TableRow key={item.contrato}>
-                      <TableCell className="font-medium">{item.contrato}</TableCell>
-                      <TableCell className="text-center">{item.quantidade}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                          {item.aprovadas}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-slate-600">
-                        {formatCurrency(item.valorOrcado)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-emerald-700">
-                        {formatCurrency(item.valorAprovado)}
-                      </TableCell>
-                      <TableCell className={`text-right font-medium ${item.diferenca >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {item.diferenca >= 0 ? '+' : ''}{formatCurrency(item.diferenca)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tecnico">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Balanço por Técnico</CardTitle>
-              <CardDescription>Resumo financeiro agrupado por técnico executor</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {porTecnico.length === 0 ? (
-                <div className="text-center py-10 text-slate-500">
-                  Nenhuma O.S atribuída a técnicos ainda.
+        {chartData.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <BarChart3 size={20} style={{ color: OB.primary }} />
+                  <CardTitle style={{ color: OB.foreground }}>Valores por Contrato</CardTitle>
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Técnico</TableHead>
-                      <TableHead className="text-center">Qtd O.S</TableHead>
-                      <TableHead className="text-center">Aprovadas</TableHead>
-                      <TableHead className="text-right">Valor Orçado</TableHead>
-                      <TableHead className="text-right">Valor Aprovado</TableHead>
-                      <TableHead className="text-right">Diferença</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {porTecnico.map((item) => (
-                      <TableRow key={item.nome}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs">
-                              {item.initials}
-                            </div>
-                            <span className="font-medium">{item.nome}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">{item.quantidade}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                            {item.aprovadas}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-slate-600">
-                          {formatCurrency(item.valorOrcado)}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-emerald-700">
-                          {formatCurrency(item.valorAprovado)}
-                        </TableCell>
-                        <TableCell className={`text-right font-medium ${item.diferenca >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {item.diferenca >= 0 ? '+' : ''}{formatCurrency(item.diferenca)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <CardDescription>Comparativo entre orçado e aprovado</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={OB.border} />
+                    <XAxis dataKey="name" fontSize={11} tick={{ fill: OB.mutedForeground }} />
+                    <YAxis fontSize={11} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} tick={{ fill: OB.mutedForeground }} />
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)} 
+                      contentStyle={{ borderRadius: '8px', border: `1px solid ${OB.border}` }}
+                    />
+                    <Legend />
+                    <Bar dataKey="orcado" name="Orçado" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="aprovado" name="Aprovado" fill={OB.chart1} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-        <TabsContent value="elaborador">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Balanço por Elaborador</CardTitle>
-              <CardDescription>Resumo financeiro agrupado por elaborador de relatório</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {porElaborador.length === 0 ? (
-                <div className="text-center py-10 text-slate-500">
-                  Nenhuma O.S atribuída a elaboradores ainda.
+            <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <DollarSign size={20} style={{ color: OB.primary }} />
+                  <CardTitle style={{ color: OB.foreground }}>Distribuição por Contrato</CardTitle>
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Elaborador</TableHead>
-                      <TableHead className="text-center">Qtd O.S</TableHead>
-                      <TableHead className="text-center">Aprovadas</TableHead>
-                      <TableHead className="text-right">Valor Orçado</TableHead>
-                      <TableHead className="text-right">Valor Aprovado</TableHead>
-                      <TableHead className="text-right">Diferença</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {porElaborador.map((item) => (
-                      <TableRow key={item.nome}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-                              {item.initials}
-                            </div>
-                            <span className="font-medium">{item.nome}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">{item.quantidade}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                            {item.aprovadas}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-slate-600">
-                          {formatCurrency(item.valorOrcado)}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-emerald-700">
-                          {formatCurrency(item.valorAprovado)}
-                        </TableCell>
-                        <TableCell className={`text-right font-medium ${item.diferenca >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {item.diferenca >= 0 ? '+' : ''}{formatCurrency(item.diferenca)}
-                        </TableCell>
+                <CardDescription>Valores aprovados</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={60}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      labelLine={false}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)} 
+                      contentStyle={{ borderRadius: '8px', border: `1px solid ${OB.border}` }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <Tabs defaultValue="contrato" className="w-full">
+          <TabsList className="bg-white border shadow-sm">
+            <TabsTrigger value="contrato" className="flex items-center gap-2 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+              <Building2 size={16} /> Por Contrato
+            </TabsTrigger>
+            <TabsTrigger value="tecnico" className="flex items-center gap-2 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+              <Users size={16} /> Por Técnico
+            </TabsTrigger>
+            <TabsTrigger value="elaborador" className="flex items-center gap-2 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+              <FileEdit size={16} /> Por Elaborador
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="contrato">
+            <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+              <CardHeader>
+                <CardTitle style={{ color: OB.foreground }}>Balanço por Contrato</CardTitle>
+                <CardDescription>Resumo financeiro agrupado por contrato</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border overflow-hidden" style={{ borderColor: OB.border }}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ background: OB.muted }}>
+                        <TableHead className="font-semibold" style={{ color: OB.foreground }}>Contrato</TableHead>
+                        <TableHead className="text-center font-semibold" style={{ color: OB.foreground }}>Qtd O.S</TableHead>
+                        <TableHead className="text-center font-semibold" style={{ color: OB.foreground }}>Aprovadas</TableHead>
+                        <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Valor Orçado</TableHead>
+                        <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Valor Aprovado</TableHead>
+                        <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Diferença</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                    </TableHeader>
+                    <TableBody>
+                      {porContrato.map((item, index) => (
+                        <TableRow 
+                          key={item.contrato}
+                          className="hover:bg-slate-50"
+                          style={{ background: index % 2 === 0 ? OB.card : OB.muted }}
+                        >
+                          <TableCell className="font-medium" style={{ color: OB.foreground }}>{item.contrato}</TableCell>
+                          <TableCell className="text-center" style={{ color: OB.mutedForeground }}>{item.quantidade}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge className="text-white" style={{ background: OB.primary }}>
+                              {item.aprovadas}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right" style={{ color: OB.mutedForeground }}>
+                            {formatCurrency(item.valorOrcado)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium" style={{ color: OB.primary }}>
+                            {formatCurrency(item.valorAprovado)}
+                          </TableCell>
+                          <TableCell 
+                            className="text-right font-medium"
+                            style={{ color: item.diferenca >= 0 ? OB.primary : OB.destructive }}
+                          >
+                            {item.diferenca >= 0 ? '+' : ''}{formatCurrency(item.diferenca)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tecnico">
+            <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+              <CardHeader>
+                <CardTitle style={{ color: OB.foreground }}>Balanço por Técnico</CardTitle>
+                <CardDescription>Resumo financeiro agrupado por técnico executor</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {porTecnico.length === 0 ? (
+                  <div className="text-center py-10 rounded-lg" style={{ background: OB.muted, color: OB.mutedForeground }}>
+                    Nenhuma O.S atribuída a técnicos ainda.
+                  </div>
+                ) : (
+                  <div className="rounded-lg border overflow-hidden" style={{ borderColor: OB.border }}>
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ background: OB.muted }}>
+                          <TableHead className="font-semibold" style={{ color: OB.foreground }}>Técnico</TableHead>
+                          <TableHead className="text-center font-semibold" style={{ color: OB.foreground }}>Qtd O.S</TableHead>
+                          <TableHead className="text-center font-semibold" style={{ color: OB.foreground }}>Aprovadas</TableHead>
+                          <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Valor Orçado</TableHead>
+                          <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Valor Aprovado</TableHead>
+                          <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Diferença</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {porTecnico.map((item, index) => (
+                          <TableRow 
+                            key={item.nome}
+                            className="hover:bg-slate-50"
+                            style={{ background: index % 2 === 0 ? OB.card : OB.muted }}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs"
+                                  style={{ background: OB.muted, color: OB.foreground }}
+                                >
+                                  {item.initials}
+                                </div>
+                                <span className="font-medium" style={{ color: OB.foreground }}>{item.nome}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center" style={{ color: OB.mutedForeground }}>{item.quantidade}</TableCell>
+                            <TableCell className="text-center">
+                              <Badge className="text-white" style={{ background: OB.primary }}>
+                                {item.aprovadas}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right" style={{ color: OB.mutedForeground }}>
+                              {formatCurrency(item.valorOrcado)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium" style={{ color: OB.primary }}>
+                              {formatCurrency(item.valorAprovado)}
+                            </TableCell>
+                            <TableCell 
+                              className="text-right font-medium"
+                              style={{ color: item.diferenca >= 0 ? OB.primary : OB.destructive }}
+                            >
+                              {item.diferenca >= 0 ? '+' : ''}{formatCurrency(item.diferenca)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="elaborador">
+            <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+              <CardHeader>
+                <CardTitle style={{ color: OB.foreground }}>Balanço por Elaborador</CardTitle>
+                <CardDescription>Resumo financeiro agrupado por elaborador de relatório</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {porElaborador.length === 0 ? (
+                  <div className="text-center py-10 rounded-lg" style={{ background: OB.muted, color: OB.mutedForeground }}>
+                    Nenhuma O.S atribuída a elaboradores ainda.
+                  </div>
+                ) : (
+                  <div className="rounded-lg border overflow-hidden" style={{ borderColor: OB.border }}>
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ background: OB.muted }}>
+                          <TableHead className="font-semibold" style={{ color: OB.foreground }}>Elaborador</TableHead>
+                          <TableHead className="text-center font-semibold" style={{ color: OB.foreground }}>Qtd O.S</TableHead>
+                          <TableHead className="text-center font-semibold" style={{ color: OB.foreground }}>Aprovadas</TableHead>
+                          <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Valor Orçado</TableHead>
+                          <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Valor Aprovado</TableHead>
+                          <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Diferença</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {porElaborador.map((item, index) => (
+                          <TableRow 
+                            key={item.nome}
+                            className="hover:bg-slate-50"
+                            style={{ background: index % 2 === 0 ? OB.card : OB.muted }}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs"
+                                  style={{ background: OB.secondary, color: '#0284c7' }}
+                                >
+                                  {item.initials}
+                                </div>
+                                <span className="font-medium" style={{ color: OB.foreground }}>{item.nome}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center" style={{ color: OB.mutedForeground }}>{item.quantidade}</TableCell>
+                            <TableCell className="text-center">
+                              <Badge className="text-white" style={{ background: OB.primary }}>
+                                {item.aprovadas}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right" style={{ color: OB.mutedForeground }}>
+                              {formatCurrency(item.valorOrcado)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium" style={{ color: OB.primary }}>
+                              {formatCurrency(item.valorAprovado)}
+                            </TableCell>
+                            <TableCell 
+                              className="text-right font-medium"
+                              style={{ color: item.diferenca >= 0 ? OB.primary : OB.destructive }}
+                            >
+                              {item.diferenca >= 0 ? '+' : ''}{formatCurrency(item.diferenca)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
-  );
-}
-
-function SummaryCard({ title, value, subtitle, icon, color }: {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  color: string;
-}) {
-  const bgColor = `bg-${color}-50`;
-  const borderColor = `border-${color}-100`;
-
-  return (
-    <Card className={`${bgColor} border ${borderColor}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-slate-600">{title}</span>
-          {icon}
-        </div>
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
-        <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
-      </CardContent>
-    </Card>
   );
 }

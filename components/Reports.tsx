@@ -29,12 +29,30 @@ import {
   FileDown, 
   FileText, 
   Filter,
-  Inbox
+  Inbox,
+  FileSpreadsheet,
+  DollarSign,
+  ClipboardList
 } from 'lucide-react';
 import { useOSStore, getContratos } from '../lib/store';
 import { TECNICOS, USERS, OSStatus } from '../lib/types';
 import { useToast } from '../hooks/use-toast';
 import { format, parseISO } from 'date-fns';
+
+const OB = {
+  background: '#f0f8ff',
+  foreground: '#374151',
+  card: '#ffffff',
+  primary: '#22c55e',
+  primaryLight: '#34d399',
+  secondary: '#e0f2fe',
+  muted: '#f3f4f6',
+  mutedForeground: '#6b7280',
+  accent: '#d1fae5',
+  border: '#e5e7eb',
+  chart1: '#22c55e',
+  destructive: '#ef4444',
+};
 
 export function Reports() {
   const ordensServico = useOSStore((state) => state.ordensServico);
@@ -122,6 +140,10 @@ export function Reports() {
     }
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  };
+
   const statusOptions: OSStatus[] = [
     'Fornecedor Acionado',
     'Em Levantamento',
@@ -132,224 +154,291 @@ export function Reports() {
     'Mudança de Contrato'
   ];
 
+  const getStatusStyle = (situacao: string) => {
+    const styles: Record<string, string> = {
+      'Concluída': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'Com Dificuldade': 'bg-red-50 text-red-700 border-red-200',
+      'Em Orçamento': 'bg-purple-50 text-purple-700 border-purple-200',
+      'Em Levantamento': 'bg-amber-50 text-amber-700 border-amber-200',
+      'Em Elaboração': 'bg-orange-50 text-orange-700 border-orange-200',
+      'Fornecedor Acionado': 'bg-blue-50 text-blue-700 border-blue-200',
+      'Mudança de Contrato': 'bg-slate-50 text-slate-700 border-slate-200',
+    };
+    return styles[situacao] || 'bg-slate-50 text-slate-700 border-slate-200';
+  };
+
   if (ordensServico.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Relatórios Gerenciais</h2>
-          <p className="text-slate-500">Extraia dados detalhados para análise e prestação de contas.</p>
+      <div className="min-h-screen p-6" style={{ background: OB.background }}>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>
+              Relatórios Gerenciais
+            </h1>
+            <p style={{ color: OB.mutedForeground }}>
+              Extraia dados detalhados para análise e prestação de contas.
+            </p>
+          </div>
+          <Card className="border-2 border-dashed" style={{ borderColor: OB.border, background: OB.card }}>
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+              <div className="p-4 rounded-full" style={{ background: OB.muted }}>
+                <Inbox className="h-12 w-12" style={{ color: OB.mutedForeground }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: OB.foreground }}>
+                  Nenhuma O.S Importada
+                </h3>
+                <p style={{ color: OB.mutedForeground }} className="max-w-sm">
+                  Importe ordens de serviço para gerar relatórios.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <Card className="border-dashed border-2">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <Inbox className="h-16 w-16 text-slate-300" />
-            <div>
-              <h3 className="text-lg font-semibold text-slate-700">Nenhuma O.S Importada</h3>
-              <p className="text-slate-500 max-w-sm">
-                Importe ordens de serviço para gerar relatórios.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 print:p-0">
-      <div className="flex justify-between items-center print:hidden">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Relatórios Gerenciais</h2>
-          <p className="text-slate-500">Extraia dados detalhados para análise e prestação de contas.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
-            <FileText size={16} /> Exportar PDF
-          </Button>
-          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
-            <FileDown size={16} /> Baixar CSV
-          </Button>
-        </div>
-      </div>
-
-      <Card className="print:hidden">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-slate-500 uppercase flex items-center gap-2">
-            <Filter size={16} /> Filtros de Pesquisa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="space-y-2">
-              <Label>Data Início</Label>
-              <Input 
-                type="date" 
-                value={filterDateStart} 
-                onChange={(e) => setFilterDateStart(e.target.value)} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Data Fim</Label>
-              <Input 
-                type="date" 
-                value={filterDateEnd} 
-                onChange={(e) => setFilterDateEnd(e.target.value)} 
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Contrato</Label>
-              <Select value={filterContract} onValueChange={setFilterContract}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Contratos</SelectItem>
-                  {contratos.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  {statusOptions.map(s => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Técnico</Label>
-              <Select value={filterTechnician} onValueChange={setFilterTechnician}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Técnicos</SelectItem>
-                  {TECNICOS.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Elaborador</Label>
-              <Select value={filterElaborador} onValueChange={setFilterElaborador}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Elaboradores</SelectItem>
-                  {elaboradores.map(e => (
-                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="print:shadow-none print:border-none">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <div className="min-h-screen p-6 print:p-0" style={{ background: OB.background }}>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center print:hidden">
           <div>
-            <CardTitle>Resultados</CardTitle>
-            <CardDescription>
-              Exibindo {filteredData.length} registros encontrados.
-            </CardDescription>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: OB.foreground }}>
+              Relatórios Gerenciais
+            </h1>
+            <p style={{ color: OB.mutedForeground }}>
+              Extraia dados detalhados para análise e prestação de contas.
+            </p>
           </div>
-          <div className="text-right flex gap-8">
-            <div>
-              <span className="text-sm text-slate-500">Total Orçado</span>
-              <h3 className="text-xl font-bold text-slate-700">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalOrcado)}
-              </h3>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleExportPDF} 
+              className="gap-2 border-slate-200 hover:bg-slate-50"
+            >
+              <FileText size={16} /> Exportar PDF
+            </Button>
+            <Button 
+              onClick={handleExportCSV} 
+              className="gap-2 text-white"
+              style={{ background: OB.primary }}
+            >
+              <FileDown size={16} /> Baixar CSV
+            </Button>
+          </div>
+        </div>
+
+        <Card className="print:hidden border-0 shadow-md" style={{ background: OB.card }}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Filter size={18} style={{ color: OB.primary }} />
+              <CardTitle className="text-sm font-semibold uppercase" style={{ color: OB.mutedForeground }}>
+                Filtros de Pesquisa
+              </CardTitle>
             </div>
-            <div>
-              <span className="text-sm text-slate-500">Total Aprovado</span>
-              <h3 className="text-xl font-bold text-emerald-600">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAprovado)}
-              </h3>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="space-y-2">
+                <Label style={{ color: OB.foreground }}>Data Início</Label>
+                <Input 
+                  type="date" 
+                  value={filterDateStart} 
+                  onChange={(e) => setFilterDateStart(e.target.value)}
+                  className="focus:border-emerald-400 focus:ring-emerald-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label style={{ color: OB.foreground }}>Data Fim</Label>
+                <Input 
+                  type="date" 
+                  value={filterDateEnd} 
+                  onChange={(e) => setFilterDateEnd(e.target.value)}
+                  className="focus:border-emerald-400 focus:ring-emerald-200"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label style={{ color: OB.foreground }}>Contrato</Label>
+                <Select value={filterContract} onValueChange={setFilterContract}>
+                  <SelectTrigger className="focus:border-emerald-400 focus:ring-emerald-200">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Contratos</SelectItem>
+                    {contratos.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label style={{ color: OB.foreground }}>Status</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="focus:border-emerald-400 focus:ring-emerald-200">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    {statusOptions.map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label style={{ color: OB.foreground }}>Técnico</Label>
+                <Select value={filterTechnician} onValueChange={setFilterTechnician}>
+                  <SelectTrigger className="focus:border-emerald-400 focus:ring-emerald-200">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Técnicos</SelectItem>
+                    {TECNICOS.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label style={{ color: OB.foreground }}>Elaborador</Label>
+                <Select value={filterElaborador} onValueChange={setFilterElaborador}>
+                  <SelectTrigger className="focus:border-emerald-400 focus:ring-emerald-200">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Elaboradores</SelectItem>
+                    {elaboradores.map(e => (
+                      <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-slate-200 overflow-auto max-h-[500px]">
-            <Table>
-              <TableHeader className="bg-slate-50 sticky top-0">
-                <TableRow>
-                  <TableHead>OS</TableHead>
-                  <TableHead>Agência</TableHead>
-                  <TableHead>Contrato</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Técnico</TableHead>
-                  <TableHead>Elaborador</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Valor Orçado</TableHead>
-                  <TableHead className="text-right">Valor Aprovado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.length === 0 ? (
-                   <TableRow>
-                     <TableCell colSpan={9} className="h-24 text-center text-slate-500">
-                       Nenhum registro encontrado com os filtros selecionados.
-                     </TableCell>
-                   </TableRow>
-                ) : (
-                  filteredData.map((os) => (
-                    <TableRow key={os.id}>
-                      <TableCell className="font-medium text-emerald-700">{os.os}</TableCell>
-                      <TableCell>
-                        <div>
-                          <span className="font-medium">{os.agencia}</span>
-                          {os.prefixo && <span className="text-xs text-slate-500 block">{os.prefixo}</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-500 max-w-[150px] truncate">{os.contrato}</TableCell>
-                      <TableCell>{formatDate(os.vencimento)}</TableCell>
-                      <TableCell>{os.tecnico || '-'}</TableCell>
-                      <TableCell>{os.elaborador || '-'}</TableCell>
-                      <TableCell>
-                         <Badge variant="outline" className={`
-                           ${os.situacao === 'Concluída' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ''}
-                           ${os.situacao === 'Com Dificuldade' ? 'bg-red-50 text-red-700 border-red-200' : ''}
-                           ${os.situacao === 'Em Orçamento' ? 'bg-purple-50 text-purple-700 border-purple-200' : ''}
-                           ${os.situacao === 'Em Levantamento' ? 'bg-amber-50 text-amber-700 border-amber-200' : ''}
-                           ${os.situacao === 'Fornecedor Acionado' ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}
-                         `}>
-                           {os.situacao}
-                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {os.valorOrcado 
-                          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(os.valorOrcado)
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-emerald-600">
-                        {os.valorAprovado 
-                          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(os.valorAprovado)
-                          : '-'
-                        }
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl" style={{ background: OB.accent }}>
+                  <ClipboardList size={24} style={{ color: OB.chart1 }} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Registros</p>
+                  <h3 className="text-2xl font-bold" style={{ color: OB.foreground }}>{filteredData.length}</h3>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl" style={{ background: OB.muted }}>
+                  <FileSpreadsheet size={24} style={{ color: OB.mutedForeground }} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Total Orçado</p>
+                  <h3 className="text-xl font-bold" style={{ color: OB.foreground }}>{formatCurrency(totalOrcado)}</h3>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md" style={{ background: OB.card }}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl" style={{ background: OB.accent }}>
+                  <DollarSign size={24} style={{ color: OB.chart1 }} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: OB.mutedForeground }}>Total Aprovado</p>
+                  <h3 className="text-xl font-bold" style={{ color: OB.primary }}>{formatCurrency(totalAprovado)}</h3>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="print:shadow-none print:border-none border-0 shadow-md" style={{ background: OB.card }}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <FileText size={20} style={{ color: OB.primary }} />
+              <div>
+                <CardTitle style={{ color: OB.foreground }}>Resultados</CardTitle>
+                <CardDescription>
+                  Exibindo {filteredData.length} registros encontrados.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border overflow-auto max-h-[500px]" style={{ borderColor: OB.border }}>
+              <Table>
+                <TableHeader className="sticky top-0" style={{ background: OB.muted }}>
+                  <TableRow>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>OS</TableHead>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>Agência</TableHead>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>Contrato</TableHead>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>Vencimento</TableHead>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>Técnico</TableHead>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>Elaborador</TableHead>
+                    <TableHead className="font-semibold" style={{ color: OB.foreground }}>Status</TableHead>
+                    <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Orçado</TableHead>
+                    <TableHead className="text-right font-semibold" style={{ color: OB.foreground }}>Aprovado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.length === 0 ? (
+                     <TableRow>
+                       <TableCell colSpan={9} className="h-24 text-center" style={{ color: OB.mutedForeground }}>
+                         Nenhum registro encontrado com os filtros selecionados.
+                       </TableCell>
+                     </TableRow>
+                  ) : (
+                    filteredData.map((os, index) => (
+                      <TableRow 
+                        key={os.id}
+                        className="hover:bg-slate-50"
+                        style={{ background: index % 2 === 0 ? OB.card : OB.muted }}
+                      >
+                        <TableCell className="font-medium" style={{ color: OB.primary }}>{os.os}</TableCell>
+                        <TableCell>
+                          <div>
+                            <span className="font-medium" style={{ color: OB.foreground }}>{os.agencia}</span>
+                            {os.prefixo && <span className="text-xs block" style={{ color: OB.mutedForeground }}>{os.prefixo}</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs max-w-[150px] truncate" style={{ color: OB.mutedForeground }}>{os.contrato}</TableCell>
+                        <TableCell style={{ color: OB.foreground }}>{formatDate(os.vencimento)}</TableCell>
+                        <TableCell style={{ color: OB.mutedForeground }}>{os.tecnico || '-'}</TableCell>
+                        <TableCell style={{ color: OB.mutedForeground }}>{os.elaborador || '-'}</TableCell>
+                        <TableCell>
+                           <Badge variant="outline" className={getStatusStyle(os.situacao)}>
+                             {os.situacao}
+                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right" style={{ color: OB.mutedForeground }}>
+                          {os.valorOrcado ? formatCurrency(os.valorOrcado) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-medium" style={{ color: OB.primary }}>
+                          {os.valorAprovado ? formatCurrency(os.valorAprovado) : '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
