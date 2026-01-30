@@ -18,6 +18,42 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+app.get('/api/notificacoes', async (req, res) => {
+  try {
+    const status = String(req.query.status || '').toLowerCase();
+    let filter: 'todas' | 'nao_lida' = 'todas';
+
+    if (status) {
+      if (status === 'todas') {
+        filter = 'todas';
+      } else if (['nao_lida', 'nao-lida', 'nao_lidas', 'nao-lidas'].includes(status)) {
+        filter = 'nao_lida';
+      } else {
+        return res.status(400).json({ error: 'Status invalido. Use todas ou nao_lidas.' });
+      }
+    }
+
+    const notificacoes = await storage.getNotificacoes(filter);
+    res.json(notificacoes);
+  } catch (error) {
+    console.error('Erro ao buscar notificacoes:', error);
+    res.status(500).json({ error: 'Erro ao buscar notificacoes' });
+  }
+});
+
+app.patch('/api/notificacoes/:id/lida', async (req, res) => {
+  try {
+    const notificacao = await storage.marcarNotificacaoComoLida(req.params.id);
+    if (!notificacao) {
+      return res.status(404).json({ error: 'Notificacao nao encontrada' });
+    }
+    res.json(notificacao);
+  } catch (error) {
+    console.error('Erro ao marcar notificacao como lida:', error);
+    res.status(500).json({ error: 'Erro ao marcar notificacao como lida' });
+  }
+});
+
 app.get('/api/ordens-servico', async (req, res) => {
   try {
     const ordens = await storage.getOrdensServico();

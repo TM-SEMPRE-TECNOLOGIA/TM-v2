@@ -1,10 +1,11 @@
 import { 
-  users, tecnicos, contratos, ordensServico, dificuldades,
+  users, tecnicos, contratos, ordensServico, dificuldades, notificacoes,
   type User, type InsertUser,
   type Tecnico, type InsertTecnico,
   type Contrato, type InsertContrato,
   type OrdemServico, type InsertOrdemServico,
-  type Dificuldade, type InsertDificuldade
+  type Dificuldade, type InsertDificuldade,
+  type Notificacao
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -32,6 +33,9 @@ export interface IStorage {
   getDificuldades(): Promise<Dificuldade[]>;
   getDificuldadesByOS(ordemServicoId: string): Promise<Dificuldade[]>;
   createDificuldade(dificuldade: InsertDificuldade): Promise<Dificuldade>;
+
+  getNotificacoes(filter?: 'todas' | 'nao_lida'): Promise<Notificacao[]>;
+  marcarNotificacaoComoLida(id: string): Promise<Notificacao | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -126,6 +130,26 @@ export class DatabaseStorage implements IStorage {
   async createDificuldade(insertDificuldade: InsertDificuldade): Promise<Dificuldade> {
     const [dificuldade] = await db.insert(dificuldades).values(insertDificuldade).returning();
     return dificuldade;
+  }
+
+  async getNotificacoes(filter: 'todas' | 'nao_lida' = 'todas'): Promise<Notificacao[]> {
+    if (filter === 'nao_lida') {
+      return await db
+        .select()
+        .from(notificacoes)
+        .where(eq(notificacoes.statusLeitura, 'nao_lida'))
+        .orderBy(desc(notificacoes.data));
+    }
+    return await db.select().from(notificacoes).orderBy(desc(notificacoes.data));
+  }
+
+  async marcarNotificacaoComoLida(id: string): Promise<Notificacao | undefined> {
+    const [notificacao] = await db
+      .update(notificacoes)
+      .set({ statusLeitura: 'lida' })
+      .where(eq(notificacoes.id, id))
+      .returning();
+    return notificacao || undefined;
   }
 }
 

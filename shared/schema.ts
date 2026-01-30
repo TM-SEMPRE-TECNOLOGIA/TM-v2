@@ -13,6 +13,11 @@ export const osStatusEnum = pgEnum('os_status', [
   'Mudança de Contrato'
 ]);
 
+export const notificacaoStatusLeituraEnum = pgEnum('notificacao_status_leitura', [
+  'lida',
+  'nao_lida'
+]);
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -66,6 +71,14 @@ export const dificuldades = pgTable("dificuldades", {
   criadoEm: timestamp("criado_em").defaultNow().notNull(),
 });
 
+export const notificacoes = pgTable("notificacoes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  data: timestamp("data").defaultNow().notNull(),
+  titulo: text("titulo").notNull(),
+  mensagem: text("mensagem").notNull(),
+  statusLeitura: notificacaoStatusLeituraEnum("status_leitura").default('nao_lida').notNull(),
+});
+
 export const ordensServicoRelations = relations(ordensServico, ({ many }) => ({
   dificuldades: many(dificuldades),
 }));
@@ -87,3 +100,5 @@ export type OrdemServico = typeof ordensServico.$inferSelect;
 export type InsertOrdemServico = typeof ordensServico.$inferInsert;
 export type Dificuldade = typeof dificuldades.$inferSelect;
 export type InsertDificuldade = typeof dificuldades.$inferInsert;
+export type Notificacao = typeof notificacoes.$inferSelect;
+export type InsertNotificacao = typeof notificacoes.$inferInsert;
