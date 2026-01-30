@@ -19,3 +19,4 @@ Coordenar a sequencia das etapas do plano, garantindo alinhamento entre agentes 
 
 ## Saidas obrigatorias
 - DOCS/agents/00_Orquestrador.agent.md  definicao do agente orquestrador
+
