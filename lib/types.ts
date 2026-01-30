@@ -47,6 +47,16 @@ export type OSStatus =
   | 'Com Dificuldade'
   | 'Mudança de Contrato';
 
+
+export type StatusLeitura = 'lida' | 'nao_lida'
+
+export interface Notificacao {
+  id: string
+  data: string
+  titulo: string
+  mensagem: string
+  statusLeitura: StatusLeitura
+}
 export interface Dificuldade {
   id: string;
   texto: string;

@@ -1,4 +1,4 @@
-import type { OrdemServico as OSType } from '../lib/types';
+import type { OrdemServico as OSType, Notificacao } from '../lib/types';
 
 const API_BASE = '/api';
 
@@ -23,6 +23,14 @@ export interface APIOrdemServico {
   updatedAt: string;
 }
 
+export interface APINotificacao {
+  id: string;
+  data: string;
+  titulo: string;
+  mensagem: string;
+  statusLeitura: 'lida' | 'nao_lida';
+}
+
 function parseOrdemServico(os: APIOrdemServico): OSType {
   return {
     id: os.id,
@@ -42,6 +50,16 @@ function parseOrdemServico(os: APIOrdemServico): OSType {
     aprovadoPor: os.aprovadoPor,
     observacoes: os.observacoes || '',
     dificuldades: [],
+  };
+}
+
+function parseNotificacao(notificacao: APINotificacao): Notificacao {
+  return {
+    id: notificacao.id,
+    data: notificacao.data,
+    titulo: notificacao.titulo,
+    mensagem: notificacao.mensagem,
+    statusLeitura: notificacao.statusLeitura,
   };
 }
 
@@ -159,5 +177,22 @@ export const api = {
     const response = await fetch(`${API_BASE}/health`);
     if (!response.ok) throw new Error('Erro ao verificar status do servidor');
     return response.json();
+  },
+
+  async getNotificacoes(status?: 'todas' | 'nao_lidas'): Promise<Notificacao[]> {
+    const params = status ? `?status=${status}` : '';
+    const response = await fetch(`${API_BASE}/notificacoes${params}`);
+    if (!response.ok) throw new Error('Erro ao buscar notificacoes');
+    const data: APINotificacao[] = await response.json();
+    return data.map(parseNotificacao);
+  },
+
+  async marcarNotificacaoComoLida(id: string): Promise<Notificacao> {
+    const response = await fetch(`${API_BASE}/notificacoes/${id}/lida`, {
+      method: 'PATCH',
+    });
+    if (!response.ok) throw new Error('Erro ao marcar notificacao como lida');
+    const data: APINotificacao = await response.json();
+    return parseNotificacao(data);
   },
 };

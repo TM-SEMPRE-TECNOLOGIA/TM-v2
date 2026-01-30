@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   BarChart2,
   Users,
@@ -13,13 +13,15 @@ import {
   Briefcase,
   DollarSign,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { TeamList } from './components/TeamList';
 import { AgendaAndChecklist } from './components/AgendaAndChecklist';
 import { WorkOrders } from './components/WorkOrders';
 import { Notifications } from './components/Notifications';
+import { NotificationsPage } from './components/NotificationsPage';
 import { Login } from './components/Login';
 import { ImportOS } from './components/ImportOS';
 import { DifficultyLog } from './components/DifficultyLog';
@@ -30,6 +32,7 @@ import type { UserRole } from './lib/types';
 import { USERS } from './lib/types';
 import { Toaster } from './components/ui/toaster';
 import { useOSStore } from './lib/store';
+import { useNotificationsStore } from './lib/notificationsStore';
 
 // Ocean Breeze Design System Colors
 const OB = {
@@ -56,6 +59,11 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const fetchOrdensServico = useOSStore(state => state.fetchOrdensServico);
+  const notificacoes = useNotificationsStore(state => state.notificacoes);
+
+  const unreadNotifications = useMemo(() => (
+    notificacoes.filter((notificacao) => notificacao.statusLeitura === 'nao_lida').length
+  ), [notificacoes]);
 
   useEffect(() => {
     fetchOrdensServico();
@@ -95,6 +103,8 @@ function App() {
         return <AgendaAndChecklist userRole={userRole} currentUser={currentUser} />;
       case 'work-orders':
         return <WorkOrders userRole={userRole} currentUser={currentUser} onNavigateToImport={() => setActiveTab('import')} />;
+      case 'notifications':
+        return <NotificationsPage />;
       case 'import':
         return userRole === 'manager' ? <ImportOS onNavigateToOS={() => setActiveTab('work-orders')} /> : <Dashboard onNavigateToImport={() => setActiveTab('import')} />;
       case 'difficulties':
@@ -200,6 +210,15 @@ function App() {
             onClick={() => setActiveTab('work-orders')}
           />
 
+          <NavItem
+            icon={<Bell size={20} />}
+            label="Notificacoes"
+            isActive={activeTab === 'notifications'}
+            isOpen={isSidebarOpen}
+            onClick={() => setActiveTab('notifications')}
+            badgeCount={unreadNotifications}
+          />
+
           {(userRole === 'manager' || userRole === 'elaborador') && (
             <NavItem
               icon={<CalendarDays size={20} />}
@@ -303,6 +322,7 @@ function App() {
             {activeTab === 'team' && 'Gestão de Equipe'}
             {activeTab === 'agenda' && 'Agenda'}
             {activeTab === 'work-orders' && getWorkOrdersLabel()}
+            {activeTab === 'notifications' && 'Notificacoes'}
             {activeTab === 'import' && 'Importação de O.S'}
             {activeTab === 'difficulties' && 'Registro de Dificuldades'}
             {activeTab === 'reports' && 'Relatórios Gerenciais'}
@@ -340,7 +360,7 @@ function App() {
   );
 }
 
-function NavItem({ icon, label, isActive, isOpen, onClick }: any) {
+function NavItem({ icon, label, isActive, isOpen, onClick, badgeCount }: any) {
   const activeStyle = {
     background: `linear-gradient(135deg, #22c55e, #16a34a)`,
     color: '#ffffff',
@@ -366,12 +386,20 @@ function NavItem({ icon, label, isActive, isOpen, onClick }: any) {
         color: isHovered ? '#ffffff' : '#94a3b8'
       }}
     >
-      <div style={{ color: isActive ? '#ffffff' : (isHovered ? '#ffffff' : '#94a3b8') }}>
+      <div className="relative" style={{ color: isActive ? '#ffffff' : (isHovered ? '#ffffff' : '#94a3b8') }}>
         {icon}
+        {!isOpen && badgeCount > 0 && (
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
+        )}
       </div>
       {isOpen && (
         <span className="font-medium whitespace-nowrap overflow-hidden text-sm text-left">
           {label}
+        </span>
+      )}
+      {isOpen && badgeCount > 0 && (
+        <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+          {badgeCount}
         </span>
       )}
     </button>
